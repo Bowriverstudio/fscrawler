@@ -38,21 +38,19 @@ public class FsCrawlerValidatorTest extends AbstractFSCrawlerTestCase {
         assertThat(settings.getFs().getUrl(), nullValue());
         assertThat(FsCrawlerValidator.validateSettings(logger, settings, false), is(false));
         assertThat(settings.getFs().getUrl(), is(Fs.DEFAULT_DIR));
-        assertThat(settings.getElasticsearch().getNodes(), hasItem(Elasticsearch.NODE_DEFAULT));
+        assertThat(settings.getElasticsearch().getNodes(), hasItem(Elasticsearch.Node.DEFAULT));
         assertThat(settings.getElasticsearch().getIndex(), is(getCurrentTestName()));
         assertThat(settings.getElasticsearch().getIndexFolder(), is(getCurrentTestName() + INDEX_SUFFIX_FOLDER));
         assertThat(settings.getServer(), nullValue());
-        assertThat(settings.getRest(), nullValue());
 
         // Checking default values
         settings = buildSettings(null, null, null, null);
         assertThat(settings.getFs().getUrl(), is(Fs.DEFAULT_DIR));
         assertThat(FsCrawlerValidator.validateSettings(logger, settings, false), is(false));
-        assertThat(settings.getElasticsearch().getNodes(), hasItem(Elasticsearch.NODE_DEFAULT));
+        assertThat(settings.getElasticsearch().getNodes(), hasItem(Elasticsearch.Node.DEFAULT));
         assertThat(settings.getElasticsearch().getIndex(), is(getCurrentTestName()));
         assertThat(settings.getElasticsearch().getIndexFolder(), is(getCurrentTestName() + INDEX_SUFFIX_FOLDER));
         assertThat(settings.getServer(), nullValue());
-        assertThat(settings.getRest(), nullValue());
 
         // Checking Checksum Algorithm
         settings = buildSettings(Fs.builder().setChecksum("FSCRAWLER").build(), null, null, null);

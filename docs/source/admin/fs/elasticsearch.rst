@@ -37,11 +37,14 @@ By default, FSCrawler will index your data in an index which name is
 the same as the crawler name (``name`` property) plus ``_doc`` suffix,
 like ``test_doc``. You can change it by setting ``index`` field:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   elasticsearch:
-     index: "docs"
+   {
+     "name" : "test",
+     "elasticsearch" : {
+       "index" : "docs"
+     }
+   }
 
 Index settings for folders
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,11 +53,14 @@ FSCrawler will also index folders in an index which name is the same as
 the crawler name (``name`` property) plus ``_folder`` suffix, like
 ``test_folder``. You can change it by setting ``index_folder`` field:
 
-.. code:: yaml
+.. code:: json
 
-  name: "test"
-  elasticsearch:
-    index_folder: "folders"
+   {
+    "name" : "test",
+    "elasticsearch" : {
+      "index_folder" : "folders"
+    }
+   }
 
 .. _mappings:
 
@@ -63,16 +69,16 @@ Mappings
 
 When FSCrawler needs to create the doc index, it applies some default
 settings and mappings which are read from
-``~/.fscrawler/_default/7/_settings.json``. You can read its content
+``~/.fscrawler/_default/6/_settings.json``. You can read its content
 from `the
-source <https://github.com/dadoonet/fscrawler/blob/master/settings/src/main/resources/fr/pilato/elasticsearch/crawler/fs/_default/7/_settings.json>`__.
+source <https://github.com/dadoonet/fscrawler/blob/master/settings/src/main/resources/fr/pilato/elasticsearch/crawler/fs/_default/6/_settings.json>`__.
 
 Settings define an analyzer named ``fscrawler_path`` which uses a `path
 hierarchy
 tokenizer <https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-pathhierarchy-tokenizer.html>`__.
 
 FSCrawler applies as well a mapping automatically for the folders which can also be
-read from `the source <https://github.com/dadoonet/fscrawler/blob/master/settings/src/main/resources/fr/pilato/elasticsearch/crawler/fs/_default/7/_settings_folder.json>`__.
+read from `the source <https://github.com/dadoonet/fscrawler/blob/master/settings/src/main/resources/fr/pilato/elasticsearch/crawler/fs/_default/6/_settings_folder.json>`__.
 
 You can also display the index mapping being used with Kibana:
 
@@ -100,8 +106,6 @@ Or fall back to the command line:
     -  ``5/_settings_folder.json``: for elasticsearch 5.x series folder index settings
     -  ``6/_settings.json``: for elasticsearch 6.x series document index settings
     -  ``6/_settings_folder.json``: for elasticsearch 6.x series folder index settings
-    -  ``7/_settings.json``: for elasticsearch 7.x series document index settings
-    -  ``7/_settings_folder.json``: for elasticsearch 7.x series folder index settings
 
 .. note::
 
@@ -113,7 +117,7 @@ Creating your own mapping (analyzers)
 
 If you want to define your own index settings and mapping to set
 analyzers for example, you can either create the index and push the
-mapping or define a ``~/.fscrawler/_default/7/_settings.json`` document
+mapping or define a ``~/.fscrawler/_default/6/_settings.json`` document
 which contains the index settings and mappings you wish **before
 starting the FSCrawler**.
 
@@ -360,8 +364,8 @@ documents against an elasticsearch cluster running version ``6.x``.
 If you create the following files, they will be picked up at job start
 time instead of the :ref:`default ones <mappings>`:
 
--  ``~/.fscrawler/{job_name}/_mappings/7/_settings.json``
--  ``~/.fscrawler/{job_name}/_mappings/7/_settings_folder.json``
+-  ``~/.fscrawler/{job_name}/_mappings/6/_settings.json``
+-  ``~/.fscrawler/{job_name}/_mappings/6/_settings_folder.json``
 
 .. tip::
     You can do the same for other elasticsearch versions with:
@@ -370,8 +374,6 @@ time instead of the :ref:`default ones <mappings>`:
     -  ``~/.fscrawler/{job_name}/_mappings/2/_settings_folder.json`` for 2.x series (deprecated)
     -  ``~/.fscrawler/{job_name}/_mappings/5/_settings.json`` for 5.x series
     -  ``~/.fscrawler/{job_name}/_mappings/5/_settings_folder.json`` for 5.x series
-    -  ``~/.fscrawler/{job_name}/_mappings/6/_settings.json`` for 6.x series
-    -  ``~/.fscrawler/{job_name}/_mappings/6/_settings_folder.json`` for 6.x series
 
 Replace existing mapping
 """"""""""""""""""""""""
@@ -392,13 +394,16 @@ FSCrawler is using bulks to send data to elasticsearch. By default the
 bulk is executed every 100 operations or every 5 seconds or every 10 megabytes. You can change
 default settings using ``bulk_size``, ``byte_size`` and ``flush_interval``:
 
-.. code:: yaml
+.. code:: json
 
-  name: "test"
-  elasticsearch:
-    bulk_size: 1000
-    byte_size: "500kb"
-    flush_interval: "2s"
+   {
+     "name" : "test",
+     "elasticsearch" : {
+       "bulk_size" : 1000,
+       "byte_size" : "500kb",
+       "flush_interval" : "2s"
+     }
+   }
 
 .. tip::
 
@@ -446,11 +451,14 @@ For example, if you have the following pipeline:
 
 In FSCrawler settings, set the ``elasticsearch.pipeline`` option:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   elasticsearch:
-     pipeline: "fscrawler"
+   {
+     "name" : "test",
+     "elasticsearch" : {
+       "pipeline" : "fscrawler"
+     }
+   }
 
 .. note::
     Folder objects are not sent through the pipeline as they are more
@@ -466,22 +474,30 @@ which is the default when running a local node on your machine.
 Of course, in production, you would probably change this and connect to
 a production cluster:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   elasticsearch:
-     nodes:
-     - url: "http://mynode1.mycompany.com:9200"
+   {
+     "name" : "test",
+     "elasticsearch" : {
+       "nodes" : [
+         { "url" : "http://mynode1.mycompany.com:9200" }
+       ]
+     }
+   }
 
 If you are using `Elasticsearch service by Elastic <https://www.elastic.co/cloud/elasticsearch-service>`_,
 you can just use the ``Cloud ID`` which is available in the Cloud Console and paste it:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   elasticsearch:
-     nodes:
-     - cloud_id: "fscrawler:ZXVyb3BlLXdlc3QxLmdjcC5jbG91ZC5lcy5pbyQxZDFlYTk5Njg4Nzc0NWE2YTJiN2NiNzkzMTUzNDhhMyQyOTk1MDI3MzZmZGQ0OTI5OTE5M2UzNjdlOTk3ZmU3Nw=="
+   {
+     "name" : "test",
+     "elasticsearch" : {
+       "nodes" : [
+         { "cloud_id" : "fscrawler:ZXVyb3BlLXdlc3QxLmdjcC5jbG91ZC5lcy5pbyQxZDFlYTk5Njg4Nzc0NWE2YTJiN2NiNzkzMTUzNDhhMyQyOTk1MDI3MzZmZGQ0OTI5OTE5M2UzNjdlOTk3ZmU3Nw==" }
+       ]
+     }
+   }
 
 This ID will be used to automatically generate the right host, port and scheme.
 
@@ -492,24 +508,32 @@ This ID will be used to automatically generate the right host, port and scheme.
 
 You can define multiple nodes:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   elasticsearch:
-     nodes:
-     - url: "http://mynode1.mycompany.com:9200"
-     - url: "http://mynode2.mycompany.com:9200"
-     - url: "http://mynode3.mycompany.com:9200"
+   {
+     "name" : "test",
+     "elasticsearch" : {
+       "nodes" : [
+         { "url" : "http://mynode1.mycompany.com:9200" },
+         { "url" : "http://mynode2.mycompany.com:9200" },
+         { "url" : "http://mynode3.mycompany.com:9200" }
+       ]
+     }
+   }
 
 .. note::
     .. versionadded:: 2.2 you can use HTTPS instead of default HTTP.
 
-    .. code:: yaml
+    .. code:: json
 
-       name: "test"
-       elasticsearch:
-         nodes:
-         - url: "https://CLUSTERID.eu-west-1.aws.found.io:9243"
+       {
+         "name" : "test",
+         "elasticsearch" : {
+           "nodes" : [
+             { "url" : "https://CLUSTERID.eu-west-1.aws.found.io:9243" }
+           ]
+         }
+       }
 
     For more information, read :ref:`ssl`.
 
@@ -524,12 +548,15 @@ If you secured your elasticsearch cluster with
 `X-Pack <https://www.elastic.co/downloads/x-pack>`__, you can provide
 ``username`` and ``password`` to FSCrawler:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   elasticsearch:
-     username: "elastic"
-     password: "changeme"
+   {
+     "name" : "test",
+     "elasticsearch" : {
+       "username" : "elastic",
+       "password" : "changeme"
+     }
+   }
 
 .. warning::
     For the current version, the elasticsearch password is stored in
@@ -568,12 +595,16 @@ It will prompt you for the password. Enter the certificate password like ``chang
 
 3. Make changes to FSCrawler ``_settings.json`` file to connect to your Elasticsearch server over HTTPS:
 
-.. code:: yaml
+.. code:: json
 
-    name: "test"
-    elasticsearch:
-      nodes:
-      - url: "https://localhost:9243"
+    {
+      "name" : "test",
+      "elasticsearch" : {
+        "nodes" : [
+          { "url" : "https://localhost:9243" }
+        ]
+      }
+    }
 
 .. tip::
 

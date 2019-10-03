@@ -19,13 +19,9 @@
 
 package fr.pilato.elasticsearch.crawler.fs.cli;
 
-import fr.pilato.elasticsearch.crawler.fs.framework.ByteSizeValue;
-import fr.pilato.elasticsearch.crawler.fs.framework.OsUtil;
-import fr.pilato.elasticsearch.crawler.fs.framework.Percentage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -37,29 +33,7 @@ public class BootstrapChecks {
     private static final Logger logger = LogManager.getLogger(BootstrapChecks.class);
 
     public static void check() {
-        checkJvm();
         checkUTF8();
-    }
-
-    private static void checkJvm() {
-        ByteSizeValue swapTotalSize = new ByteSizeValue(OsUtil.getTotalSwapSpaceSize());
-        ByteSizeValue swapFreeSize = new ByteSizeValue(OsUtil.getFreeSwapSpaceSize());
-        ByteSizeValue ramTotalSize = new ByteSizeValue(OsUtil.getTotalPhysicalMemorySize());
-        ByteSizeValue ramFreeSize = new ByteSizeValue(OsUtil.getFreePhysicalMemorySize());
-        ByteSizeValue heapTotalSize = new ByteSizeValue(Runtime.getRuntime().maxMemory());
-        ByteSizeValue heapFreeSize = new ByteSizeValue(Runtime.getRuntime().freeMemory());
-
-        logger.info("Memory [Free/Total=Percent]: HEAP [{}/{}={}], RAM [{}/{}={}], Swap [{}/{}={}].",
-                heapFreeSize, heapTotalSize, computePercentage(heapFreeSize, heapTotalSize),
-                ramFreeSize, ramTotalSize, computePercentage(ramFreeSize, ramTotalSize),
-                swapFreeSize, swapTotalSize, computePercentage(swapFreeSize, swapTotalSize));
-    }
-
-    static Percentage computePercentage(ByteSizeValue current, ByteSizeValue max) {
-        if (max.getBytes() <= 0) {
-            return new Percentage();
-        }
-        return new Percentage((new BigDecimal(((double) current.getBytes())/(double) max.getBytes()*100)).setScale(2, BigDecimal.ROUND_HALF_EVEN).doubleValue(), true);
     }
 
     private static void checkUTF8() {

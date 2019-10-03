@@ -14,7 +14,7 @@ Here is a list of Local FS settings (under ``fs.`` prefix)`:
 +----------------------------+-----------------------+---------------------------------+
 | ``fs.includes``            | ``null``              | `Includes and excludes`_        |
 +----------------------------+-----------------------+---------------------------------+
-| ``fs.excludes``            | ``["*/~*"]``          | `Includes and excludes`_        |
+| ``fs.excludes``            | ``["~*"]``            | `Includes and excludes`_        |
 +----------------------------+-----------------------+---------------------------------+
 | ``fs.filters``             | ``null``              | `Filter content`_               |
 +----------------------------+-----------------------+---------------------------------+
@@ -28,7 +28,7 @@ Here is a list of Local FS settings (under ``fs.`` prefix)`:
 +----------------------------+-----------------------+---------------------------------+
 | ``fs.attributes_support``  | ``false``             | `Adding file attributes`_       |
 +----------------------------+-----------------------+---------------------------------+
-| ``fs.raw_metadata``        | ``false``             | `Disabling raw metadata`_       |
+| ``fs.raw_metadata``        | ``true``              | `Disabling raw metadata`_       |
 +----------------------------+-----------------------+---------------------------------+
 | ``fs.filename_as_id``      | ``false``             | :ref:`filename-as-id`           |
 +----------------------------+-----------------------+---------------------------------+
@@ -52,22 +52,23 @@ Here is a list of Local FS settings (under ``fs.`` prefix)`:
 +----------------------------+-----------------------+---------------------------------+
 | ``fs.checksum``            | ``null``              | `File Checksum`_                |
 +----------------------------+-----------------------+---------------------------------+
-| ``fs.follow_symlinks``     | ``false``             | `Follow Symlinks`_              |
-+----------------------------+-----------------------+---------------------------------+
 
 .. _root-directory:
 
 Root directory
 ^^^^^^^^^^^^^^
 
-Define ``fs.url`` property in your ``~/.fscrawler/test/_settings.yaml``
+Define ``fs.url`` property in your ``~/.fscrawler/test/_settings.json``
 file:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     url: "/path/to/data/dir"
+   {
+     "name" : "test",
+     "fs" : {
+       "url" : "/path/to/data/dir"
+     }
+   }
 
 For Windows users, use a form like ``c:/tmp`` or ``c:\\tmp``.
 
@@ -80,19 +81,25 @@ unit <https://www.elastic.co/guide/en/elasticsearch/reference/current/common-opt
 
 For example, here is a 15 minutes update rate:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     update_rate: "15m"
+   {
+     "name": "test",
+     "fs": {
+       "update_rate": "15m"
+     }
+   }
 
 Or a 3 hours update rate:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     update_rate: "3h"
+   {
+     "name": "test",
+     "fs": {
+       "update_rate": "3h"
+     }
+   }
 
 ``update_rate`` is the pause duration between the last time we read the
 file system and another run. Which means that if you set it to ``15m``,
@@ -108,17 +115,23 @@ Let’s say you want to index only docs like ``*.doc`` and ``*.pdf`` but
 ``resume*``. So ``resume_david.pdf`` won’t be indexed.
 
 Define ``fs.includes`` and ``fs.excludes`` properties in your
-``~/.fscrawler/test/_settings.yaml`` file:
+``~/.fscrawler/test/_settings.json`` file:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     includes:
-     - "*/*.doc"
-     - "*/*.pdf"
-     excludes:
-     - "*/resume*"
+   {
+     "name" : "test",
+     "fs": {
+       "includes": [
+         "*/*.doc",
+         "*/*.pdf"
+       ],
+       "excludes": [
+         "*/resume*"
+       ]
+     }
+   }
+
 
 By default, FSCrawler will exclude files starting with ``~``.
 
@@ -147,29 +160,21 @@ Let's take the following example with the ``root`` dir as ``/tmp``:
         └── subfolderC
 
 If you define the following ``fs.excludes`` property in your
-``~/.fscrawler/test/_settings.yaml`` file:
+``~/.fscrawler/test/_settings.json`` file:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     excludes:
-     - "/folderB/subfolder*"
+   {
+     "name" : "test",
+     "fs": {
+       "excludes": [
+         "/folderB/subfolder*"
+       ]
+     }
+   }
 
 Then all files but the ones in ``/folderB/subfolderA``, ``/folderB/subfolderB`` and
 ``/folderB/subfolderC`` will be indexed.
-
-Since the includes and excludes work on the entire *path of the file* you must consider that when using wildcards. Below are some includes and excludes pattern to help convey the idea better.
-
-+--------------------+------------------------------------------------+------------------------------------------------+
-| Pattern            | Includes                                       | Excludes                                       |
-+====================+================================================+================================================+
-| ``*.jpg``          | Include all jpg files                          | exclude all jpg files                          |
-+--------------------+------------------------------------------------+------------------------------------------------+
-| ``/images/*.jpg``  | Include all jpg files in the images directory  | Exclude all jpg files in the images directory  |
-+--------------------+------------------------------------------------+------------------------------------------------+
-| ``*/old-*.jpg``    | Include all jpg files that start with ``old-`` | Exclude all jpg files that start with ``old-`` |
-+--------------------+------------------------------------------------+------------------------------------------------+
 
 .. versionadded:: 2.6
 
@@ -185,15 +190,19 @@ regular expression that match the extracted content.
 Documents which are not matching will be simply ignored and not indexed.
 
 If you define the following ``fs.filters`` property in your
-``~/.fscrawler/test/_settings.yaml`` file:
+``~/.fscrawler/test/_settings.json`` file:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     filters:
-     - ".*foo.*"
-     - "^4\\d{3}([\\ \\-]?)\\d{4}\\1\\d{4}\\1\\d{4}$"
+   {
+     "name" : "test",
+     "fs": {
+       "filters": [
+         ".*foo.*",
+         "^4\\d{3}([\\ \\-]?)\\d{4}\\1\\d{4}\\1\\d{4}$"
+       ]
+     }
+   }
 
 With this example, only documents which contains the word ``foo`` and a VISA credit card number
 with the form like ``4012888888881881``, ``4012 8888 8888 1881`` or ``4012-8888-8888-1881``
@@ -210,11 +219,14 @@ to the index, set option `Add as Inner Object`_
 which stores additional metadata and the JSon contents under field
 ``object``.
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     json_support: true
+   {
+     "name" : "test",
+     "fs" : {
+       "json_support" : true
+     }
+   }
 
 Of course, if you did not define a mapping before launching the crawler,
 Elasticsearch will auto guess the mapping.
@@ -233,9 +245,12 @@ which stores additional metadata and the XML contents under field
 
 .. code:: json
 
-   name: "test"
-   fs:
-     xml_support: true
+   {
+     "name" : "test",
+     "fs" : {
+       "xml_support" : true
+     }
+   }
 
 Of course, if you did not define a mapping before launching the crawler,
 Elasticsearch will auto guess the mapping.
@@ -252,11 +267,14 @@ be added to the index, (determined by the file timestamp).
 If you need to keep json or xml documents synchronized to elasticsearch,
 you should set this option.
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     add_as_inner_object: true
+   {
+     "name" : "test",
+     "fs" : {
+       "add_as_inner_object" : true
+     }
+   }
 
 Index folders
 ^^^^^^^^^^^^^
@@ -271,52 +289,67 @@ Note that in that case, FSCrawler won’t be able to detect removed
 folders so any document has been indexed in elasticsearch, it won’t be
 removed when you remove or move the folder away.
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     index_folders: false
+   {
+     "name" : "test",
+     "fs" : {
+       "index_folders" : false
+     }
+   }
 
 Dealing with multiple types and multiple dirs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have more than one type, create as many crawlers as types:
 
-``~/.fscrawler/test_type1/_settings.yaml``:
+``~/.fscrawler/test_type1/_settings.json``:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test_type1"
-   fs:
-     url: "/tmp/type1"
-     json_support: true
-   elasticsearch:
-     index: "mydocs1"
-     index_folder: "myfolders1"
+   {
+     "name": "test_type1",
+     "fs": {
+       "url": "/tmp/type1",
+       "json_support" : true
+     },
+     "elasticsearch": {
+       "index": "mydocs1",
+       "index_folder": "myfolders1"
+     }
+   }
 
-``~/.fscrawler/test_type2/_settings.yaml``:
+``~/.fscrawler/test_type2/_settings.json``:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test_type2"
-   fs:
-     url: "/tmp/type2"
-     json_support: true
-   elasticsearch:
-     index: "mydocs2"
-     index_folder: "myfolders2"
+   {
+     "name": "test_type2",
+     "fs": {
+       "url": "/tmp/type2",
+       "json_support" : true
+     },
+     "elasticsearch": {
+       "index": "mydocs2",
+       "index_folder": "myfolders2"
+     }
+   }
 
-``~/.fscrawler/test_type3/_settings.yaml``:
+``~/.fscrawler/test_type3/_settings.json``:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test_type3"
-   fs:
-     url: "/tmp/type3"
-     xml_support: true
-   elasticsearch:
-     index: "mydocs3"
-     index_folder: "myfolders3"
+   {
+     "name": "test_type3",
+     "fs": {
+       "url": "/tmp/type3",
+       "xml_support" : true
+     },
+     "elasticsearch": {
+       "index": "mydocs3",
+       "index_folder": "myfolders3"
+     }
+   }
 
 Dealing with multiple types within the same dir
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -324,47 +357,56 @@ Dealing with multiple types within the same dir
 You can also index many types from one single dir using two crawlers
 scanning the same dir and by setting ``includes`` parameter:
 
-``~/.fscrawler/test_type1.yaml``:
+``~/.fscrawler/test_type1.json``:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test_type1"
-   fs:
-     url: "/tmp"
-     includes:
-     - "type1*.json"
-     json_support: true
-   elasticsearch:
-     index: "mydocs1"
-     index_folder: "myfolders1"
+   {
+     "name": "test_type1",
+     "fs": {
+       "url": "/tmp",
+       "includes": [ "type1*.json" ],
+       "json_support" : true
+     },
+     "elasticsearch": {
+       "index": "mydocs1",
+       "index_folder": "myfolders1"
+     }
+   }
 
-``~/.fscrawler/test_type2.yaml``:
+``~/.fscrawler/test_type2.json``:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test_type2"
-   fs:
-     url: "/tmp"
-     includes:
-     - "type2*.json"
-     json_support: true
-   elasticsearch:
-     index: "mydocs2"
-     index_folder: "myfolders2"
+   {
+     "name": "test_type2",
+     "fs": {
+       "url": "/tmp",
+       "includes": [ "type2*.json" ],
+       "json_support" : true
+     },
+     "elasticsearch": {
+       "index": "mydocs2",
+       "index_folder": "myfolders2"
+     }
+   }
 
-``~/.fscrawler/test_type3.yaml``:
+``~/.fscrawler/test_type3.json``:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test_type3"
-   fs:
-     url: "/tmp"
-     includes:
-     - "*.xml"
-     xml_support: true
-   elasticsearch:
-     index: "mydocs3"
-     index_folder: "myfolders3"
+   {
+     "name": "test_type3",
+     "fs": {
+       "url": "/tmp",
+       "includes": [ "*.xml" ],
+       "xml_support" : true
+     },
+     "elasticsearch": {
+       "index": "mydocs3",
+       "index_folder": "myfolders3"
+     }
+   }
 
 
 .. _filename-as-id:
@@ -377,11 +419,14 @@ from the filename to avoid issues with special characters in filename.
 You can force to use the ``_id`` to be the filename using
 ``filename_as_id`` attribute:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     filename_as_id: true
+   {
+     "name" : "test",
+     "fs" : {
+       "filename_as_id" : true
+     }
+   }
 
 Adding file attributes
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -389,11 +434,14 @@ Adding file attributes
 If you want to add file attributes such as ``attributes.owner``, ``attributes.group``
 and ``attributes.permissions``, you can set ``attributes_support`` to ``true``.
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     attributes_support: true
+   {
+     "name" : "test",
+     "fs" : {
+       "attributes_support" : true
+     }
+   }
 
 .. note::
 
@@ -403,15 +451,18 @@ and ``attributes.permissions``, you can set ``attributes_support`` to ``true``.
 Disabling raw metadata
 ^^^^^^^^^^^^^^^^^^^^^^
 
-FSCrawler can extract all found metadata within a ``meta.raw`` object in addition
-to the standard metadata fields.
-If you want to enable this feature, you can set ``raw_metadata`` to ``true``.
+By default, FSCrawler will extract all found metadata within
+``meta.raw`` object. If you want to disable this feature, you can set
+``raw_metadata`` to ``false``.
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     raw_metadata: true
+   {
+     "name" : "test",
+     "fs" : {
+       "raw_metadata" : false
+     }
+   }
 
 Generated raw metadata depends on the file format itself.
 
@@ -511,24 +562,20 @@ Where a MP3 file would generate:
     Note that dots in metadata names will be replaced by a ``:``. For
     example ``PTEX.Fullbanner`` will be indexed as ``PTEX:Fullbanner``.
 
-.. note::
-    Note that if you have a lot of different type of files, that can generate a lot of
-    raw metadata which can make you hit the total number of field limit in elasticsearch
-    mappings. In which case you will need to change the index settings ``foo``.
-
-    See `elasticsearch documentation <https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html#mapping-limit-settings>`__
-
 Disabling file size field
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, FSCrawler will create a field to store the original file
 size in octets. You can disable it using \`add_filesize’ option:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     add_filesize: false
+   {
+     "name" : "test",
+     "fs" : {
+       "add_filesize" : false
+     }
+   }
 
 Ignore deleted files
 ^^^^^^^^^^^^^^^^^^^^
@@ -537,11 +584,14 @@ If you don’t want to remove indexed documents when you remove a file or
 a directory, you can set ``remove_deleted`` to ``false`` (default to
 ``true``):
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     remove_deleted: false
+   {
+     "name" : "test",
+     "fs" : {
+       "remove_deleted" : false
+     }
+   }
 
 Ignore content
 ^^^^^^^^^^^^^^
@@ -550,11 +600,14 @@ If you don’t want to extract file content but only index filesystem
 metadata such as filename, date, size and path, you can set
 ``index_content`` to ``false`` (default to ``true``):
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     index_content: false
+   {
+     "name" : "test",
+     "fs" : {
+       "index_content" : false
+     }
+   }
 
 .. _continue_on_error:
 
@@ -568,11 +621,14 @@ Permission denied exception. If you want to just skip this File and
 continue with the rest of the directory tree you can set
 ``continue_on_error`` to ``true`` (default to ``false``):
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     continue_on_error: true
+   {
+     "name" : "test",
+     "fs" : {
+       "continue_on_error" : true
+     }
+   }
 
 Language detection
 ^^^^^^^^^^^^^^^^^^
@@ -581,11 +637,14 @@ Language detection
 
 You can ask for language detection using ``lang_detect`` option:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     lang_detect: true
+   {
+     "name" : "test",
+     "fs" : {
+       "lang_detect" : true
+     }
+   }
 
 In that case, a new field named ``meta.language`` is added to the
 generated JSon document.
@@ -614,13 +673,17 @@ For example, you can define a pipeline named ``langdetect`` with:
 In FSCrawler settings, set both ``fs.lang_detect`` and
 ``elasticsearch.pipeline`` options:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     lang_detect: true
-   elasticsearch:
-     pipeline: "langdetect"
+   {
+     "name" : "test",
+     "fs" : {
+       "lang_detect" : true
+     },
+     "elasticsearch" : {
+       "pipeline" : "langdetect"
+     }
+   }
 
 And then, a document containing french text will be sent to
 ``myindex-fr``. A document containing english text will be sent to
@@ -645,11 +708,14 @@ Storing binary source document
 You can store in elasticsearch itself the binary document (BASE64 encoded)
 using ``store_source`` option:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     store_source: true
+   {
+     "name" : "test",
+     "fs" : {
+       "store_source" : true
+     }
+   }
 
 In that case, a new field named ``attachment`` is added to the generated
 JSon document. This field is not indexed. Default mapping for
@@ -676,11 +742,14 @@ By default FSCrawler will extract only the first 100 000 characters.
 But, you can set ``indexed_chars`` to ``5000`` in FSCrawler settings in
 order to overwrite this default settings.
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     indexed_chars: "5000"
+   {
+     "name": "test",
+     "fs": {
+       "indexed_chars": "5000"
+     }
+   }
 
 This number can be either a fixed size, number of characters that is, or
 a percent using ``%`` sign. The percentage value will be applied to the
@@ -715,11 +784,14 @@ But some files on your file system might be a way too big to be parsed.
 
 Set ``ignore_above`` to the desired value of the limit.
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     ignore_above: "5mb"
+   {
+     "name": "test",
+     "fs": {
+       "ignore_above": "5mb"
+     }
+   }
 
 File checksum
 ^^^^^^^^^^^^^
@@ -728,22 +800,12 @@ If you want FSCrawler to generate a checksum for each file, set
 ``checksum`` to the algorithm you wish to use to compute the checksum,
 such as ``MD5`` or ``SHA-1``.
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   fs:
-     checksum: "MD5"
+   {
+     "name": "test",
+     "fs": {
+       "checksum": "MD5"
+     }
+   }
 
-Follow Symlinks
-^^^^^^^^^^^^^^^
-
-.. versionadded:: 2.7
-
-If you want FSCrawler to follow the symbolic links, you need to be explicit about it and set
-``follow_symlink`` to ``true``. Starting from version 2.7, symbolic links are not followed anymore.
-
-.. code:: yaml
-
-   name: "test"
-   fs:
-     follow_symlink: true

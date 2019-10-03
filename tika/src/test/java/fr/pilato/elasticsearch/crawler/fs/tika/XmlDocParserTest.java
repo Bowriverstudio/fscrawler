@@ -29,20 +29,20 @@ import static org.hamcrest.Matchers.is;
 
 public class XmlDocParserTest extends DocParserTestCase {
 
-    @Test
+    /*@Test
     public void testXml() throws IOException {
         String doc = extractFromFile("issue-163.xml");
         assertThat(doc, is("{\"version\":\"1.0\",\"subscription-update\":{\"subscriptionid\":\"0\",\"requestid\":\"0\"," +
                 "\"last_push\":\"2016-06-03 06:21:34\",\"current_push\":\"2016-06-03 06:21:37\",\"exec\":\"0.002\"," +
                 "\"lineup\":{\"id\":\"0\",\"del\":\"no\"}}}"));
-    }
+    }*/
 
-    @Test
+    /*@Test
     public void testXmlNestedObjects() throws IOException {
         String doc = extractFromFile("issue-592.xml");
         assertThat(doc, is("{\"object\":[{\"id\":\"1\",\"name\":\"foo\"},{\"id\":\"2\",\"name\":\"bar\"}]}"));
     }
-
+*/
     private String extractFromFile(String filename) throws IOException {
         InputStream data = getBinaryContent(filename);
         return XmlDocParser.generate(data);

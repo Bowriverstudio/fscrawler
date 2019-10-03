@@ -36,7 +36,6 @@ import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractor;
 import fr.pilato.elasticsearch.crawler.fs.framework.ByteSizeValue;
 import fr.pilato.elasticsearch.crawler.fs.framework.SignTool;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
-import fr.pilato.elasticsearch.crawler.fs.tika.TikaDocParser;
 import fr.pilato.elasticsearch.crawler.fs.tika.XmlDocParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,6 +61,7 @@ import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.compute
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.isFileSizeUnderLimit;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.isIndexable;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.localDateTimeToDate;
+import static fr.pilato.elasticsearch.crawler.fs.tika.TikaDocParser.generate;
 
 public abstract class FsParserAbstract extends FsParser {
     private static final Logger logger = LogManager.getLogger(FsParserAbstract.class);
@@ -78,6 +78,12 @@ public abstract class FsParserAbstract extends FsParser {
     private final ElasticsearchClient esClient;
     private final Integer loop;
     private final MessageDigest messageDigest;
+
+    /**
+     * This is a temporary value we need to support both v5 and newer versions.
+     * V5 does not allow a type named _doc but V6 recommends using it.
+     */
+    private final String typeName;
 
     private ScanStatistic stats;
 
@@ -100,6 +106,8 @@ public abstract class FsParserAbstract extends FsParser {
         } else {
             messageDigest = null;
         }
+
+        typeName = esClient.getDefaultTypeName();
     }
 
     protected abstract FileAbstractor buildFileAbstractor();
@@ -189,6 +197,7 @@ public abstract class FsParserAbstract extends FsParser {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private LocalDateTime getLastDateFromMeta(String jobName) throws IOException {
         try {
             FsJob fsJob = fsJobFileHandler.read(jobName);
@@ -247,7 +256,6 @@ public abstract class FsParserAbstract extends FsParser {
 
             if (!ignoreFolder) {
                 for (FileAbstractModel child : children) {
-                    logger.trace("FileAbstractModel = {}", child);
                     String filename = child.getName();
 
                     String virtualFileName = computeVirtualPathName(stats.getRootPath(), new File(filepath, filename).toString());
@@ -471,7 +479,7 @@ public abstract class FsParserAbstract extends FsParser {
                     doc.setObject(XmlDocParser.generateMap(inputStream));
                 } else {
                     // Extracting content with Tika
-                    TikaDocParser.generate(fsSettings, inputStream, filename, fullFilename, doc, messageDigest, filesize);
+                    generate(fsSettings, inputStream, filename, doc, messageDigest, filesize);
                 }
 
                 // We index the data structure
@@ -569,26 +577,26 @@ public abstract class FsParserAbstract extends FsParser {
     /**
      * Add to bulk an IndexRequest in JSon format
      */
-    private void esIndex(String index, String id, String json, String pipeline) {
-        logger.debug("Indexing {}/{}?pipeline={}", index, id, pipeline);
+    void esIndex(String index, String id, String json, String pipeline) {
+        logger.debug("Indexing {}/{}/{}?pipeline={}", index, typeName, id, pipeline);
         logger.trace("JSon indexed : {}", json);
 
         if (!closed) {
-            esClient.index(index, id, json, pipeline);
+            esClient.index(index, typeName, id, json, pipeline);
         } else {
-            logger.warn("trying to add new file while closing crawler. Document [{}]/[{}] has been ignored", index, id);
+            logger.warn("trying to add new file while closing crawler. Document [{}]/[{}]/[{}] has been ignored", index, typeName, id);
         }
     }
 
     /**
      * Add to bulk a DeleteRequest
      */
-    private void esDelete(String index, String id) {
-        logger.debug("Deleting {}/{}", index, id);
+    void esDelete(String index, String id) {
+        logger.debug("Deleting {}/{}/{}", index, typeName, id);
         if (!closed) {
-            esClient.delete(index, id);
+            esClient.delete(index, typeName, id);
         } else {
-            logger.warn("trying to remove a file while closing crawler. Document [{}]/[{}] has been ignored", index, id);
+            logger.warn("trying to remove a file while closing crawler. Document [{}]/[{}]/[{}] has been ignored", index, typeName, id);
         }
     }
 

@@ -23,8 +23,6 @@ package fr.pilato.elasticsearch.crawler.fs.client;
 import java.io.Closeable;
 import java.io.IOException;
 
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMajorVersion;
-
 /**
  * Simple Elasticsearch client over HTTP or HTTPS.
  * Only needed methods are exposed.
@@ -37,7 +35,7 @@ public interface ElasticsearchClient extends Closeable {
      * won't work with a cluster 5.x.y or 7.x.y.
      * @return The major digit of the compatible elasticsearch version
      */
-    String compatibleVersion();
+    byte compatibleVersion();
 
     /**
      * Start the client and its internal resources. This must be called before any operation can be performed.
@@ -49,7 +47,7 @@ public interface ElasticsearchClient extends Closeable {
      * Get version about the node it's connected to
      * @throws IOException in case of communication error with the cluster
      */
-    String getVersion() throws IOException;
+    ESVersion getVersion() throws IOException;
 
     /**
      * Create an index
@@ -117,26 +115,29 @@ public interface ElasticsearchClient extends Closeable {
     /**
      * Index a document using a BulkProcessor behind the scenes
      * @param index     Index name
+     * @param type      Type name
      * @param id        Document ID
      * @param json      JSON
      * @param pipeline  Pipeline (can be null)
      */
-    void index(String index, String id, String json, String pipeline);
+    void index(String index, String type, String id, String json, String pipeline);
 
     /**
      * Index a document (for test purposes only)
      * @param index     Index name
+     * @param type      Type name
      * @param id        Document ID
      * @param json      JSON
      */
-    void indexSingle(String index, String id, String json) throws IOException;
+    void indexSingle(String index, String type, String id, String json) throws IOException;
 
     /**
      * Delete a document using a BulkProcessor behind the scenes
      * @param index     Index name
+     * @param type      Type name
      * @param id        Document ID
      */
-    void delete(String index, String id);
+    void delete(String index, String type, String id);
 
     /**
      * Create all needed indices
@@ -180,27 +181,29 @@ public interface ElasticsearchClient extends Closeable {
     /**
      * Get a document by its ID
      * @param index Index name
+     * @param type  Type
      * @param id    Document id
      * @return A Search Hit
      * @throws IOException In case of error
      */
-    ESSearchHit get(String index, String id) throws IOException;
+    ESSearchHit get(String index, String type, String id) throws IOException;
 
     /**
      * Check that a document exists
      * @param index Index name
+     * @param type  Type
      * @param id    Document id
      * @return true if it exists, false otherwise
      * @throws IOException In case of error
      */
-    boolean exists(String index, String id) throws IOException;
+    boolean exists(String index, String type, String id) throws IOException;
 
     default void checkVersion() throws IOException {
-        String esVersion = getVersion();
-        if (!extractMajorVersion(esVersion).equals(compatibleVersion())) {
+        ESVersion esVersion = getVersion();
+        if (esVersion.major != compatibleVersion()) {
             throw new RuntimeException("The Elasticsearch client version [" +
                     compatibleVersion() + "] is not compatible with the Elasticsearch cluster version [" +
-                    esVersion + "].");
+                    esVersion.toString() + "].");
         }
     }
 }

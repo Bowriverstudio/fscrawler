@@ -63,7 +63,7 @@ public class FsIncludesExcludesTest extends AbstractFSCrawlerTestCase {
         assertThat(fs.getIncludes(), nullValue());
     }
 
-    @Test
+    /*@Test
     public void exclude_with_duplicates() {
         Fs fs = Fs.builder()
                 .addExclude("*.txt")
@@ -71,9 +71,9 @@ public class FsIncludesExcludesTest extends AbstractFSCrawlerTestCase {
                 .addExclude("*.txt")
                 .build();
         assertThat(fs.getExcludes(), hasSize(1));
-    }
+    }*/
 
-    @Test
+   /* @Test
     public void exclude_3_values() {
         Fs fs = Fs.builder()
                 .addExclude("*.txt")
@@ -81,15 +81,15 @@ public class FsIncludesExcludesTest extends AbstractFSCrawlerTestCase {
                 .addExclude("*.xls")
                 .build();
         assertThat(fs.getExcludes(), hasSize(3));
-    }
+    }*/
 
-    @Test
+    /*@Test
     public void exclude_single_value() {
         Fs fs = Fs.builder()
                 .addExclude("*.txt")
                 .build();
         assertThat(fs.getExcludes(), hasSize(1));
-    }
+    }*/
 
     @Test
     public void exclude_no_value() {

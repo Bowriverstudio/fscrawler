@@ -32,6 +32,7 @@ import fr.pilato.elasticsearch.crawler.fs.client.ESSearchRequest;
 import fr.pilato.elasticsearch.crawler.fs.client.ESSearchResponse;
 import fr.pilato.elasticsearch.crawler.fs.client.ESTermQuery;
 import fr.pilato.elasticsearch.crawler.fs.client.ESTermsAggregation;
+import fr.pilato.elasticsearch.crawler.fs.client.ESVersion;
 import fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClient;
 import fr.pilato.elasticsearch.crawler.fs.framework.JsonUtil;
 import fr.pilato.elasticsearch.crawler.fs.settings.Elasticsearch;
@@ -48,7 +49,9 @@ import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
@@ -67,8 +70,6 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.ByteSizeValue;
@@ -93,10 +94,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
+import static fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClientUtil.decodeCloudId;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.INDEX_SETTINGS_FILE;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.INDEX_SETTINGS_FOLDER_FILE;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMajorVersion;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMinorVersion;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.isNullOrEmpty;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.readJsonFile;
 import static org.elasticsearch.action.support.IndicesOptions.LENIENT_EXPAND_OPEN;
@@ -126,8 +126,8 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
     }
 
     @Override
-    public String compatibleVersion() {
-        return "6";
+    public byte compatibleVersion() {
+        return 6;
     }
 
     @Override
@@ -166,9 +166,9 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
     }
 
     @Override
-    public String getVersion() throws IOException {
+    public ESVersion getVersion() throws IOException {
         Version version = client.info(RequestOptions.DEFAULT).getVersion();
-        return version.toString();
+        return ESVersion.fromString(version.toString());
     }
 
     /**
@@ -177,13 +177,13 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
      */
     @Override
     public void checkVersion() throws IOException {
-        String esVersion = getVersion();
-        if (!extractMajorVersion(esVersion).equals(compatibleVersion())) {
+        ESVersion esVersion = getVersion();
+        if (esVersion.major != compatibleVersion()) {
             throw new RuntimeException("The Elasticsearch client version [" +
                     compatibleVersion() + "] is not compatible with the Elasticsearch cluster version [" +
-                    esVersion + "].");
+                    esVersion.toString() + "].");
         }
-        if (Integer.parseInt(extractMinorVersion(esVersion)) < 4) {
+        if (esVersion.minor < 4) {
             throw new RuntimeException("This version of FSCrawler is not compatible with " +
                     "Elasticsearch version [" +
                     esVersion.toString() + "]. Please upgrade Elasticsearch to at least a 6.4.x version.");
@@ -241,11 +241,7 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
             if (e.getMessage().contains("resource_already_exists_exception") && !ignoreErrors) {
                 throw new RuntimeException("index already exists");
             }
-            if (!e.getMessage().contains("resource_already_exists_exception")) {
-                throw e;
-            }
         }
-        waitForHealthyIndex(index);
     }
 
     /**
@@ -256,7 +252,9 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
      */
     public boolean isExistingIndex(String index) throws IOException {
         logger.debug("is existing index [{}]", index);
-        return client.indices().exists(new GetIndexRequest(index), RequestOptions.DEFAULT);
+        GetIndexRequest gir = new GetIndexRequest();
+        gir.indices(index);
+        return client.indices().exists(gir, RequestOptions.DEFAULT);
     }
 
     /**
@@ -370,20 +368,20 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
     }
 
     @Override
-    public void index(String index, String id, String json, String pipeline) {
-        bulkProcessor.add(new IndexRequest(index, getDefaultTypeName(), id).setPipeline(pipeline).source(json, XContentType.JSON));
+    public void index(String index, String type, String id, String json, String pipeline) {
+        bulkProcessor.add(new IndexRequest(index, type, id).setPipeline(pipeline).source(json, XContentType.JSON));
     }
 
     @Override
-    public void indexSingle(String index, String id, String json) throws IOException {
-        IndexRequest request = new IndexRequest(index, getDefaultTypeName(), id);
+    public void indexSingle(String index, String type, String id, String json) throws IOException {
+        IndexRequest request = new IndexRequest(index, type, id);
         request.source(json, XContentType.JSON);
         client.index(request, RequestOptions.DEFAULT);
     }
 
     @Override
-    public void delete(String index, String id) {
-        bulkProcessor.add(new DeleteRequest(index, getDefaultTypeName(), id));
+    public void delete(String index, String type, String id) {
+        bulkProcessor.add(new DeleteRequest(index, type, id));
     }
 
     @Override
@@ -404,7 +402,14 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
 
     private static RestClientBuilder buildRestClient(Elasticsearch settings) {
         List<HttpHost> hosts = new ArrayList<>(settings.getNodes().size());
-        settings.getNodes().forEach(node -> hosts.add(HttpHost.create(node.decodedUrl())));
+        settings.getNodes().forEach(node -> {
+            if (node.getCloudId() != null) {
+                // We have a cloud id which simplifies all
+                hosts.add(HttpHost.create(decodeCloudId(node.getCloudId())));
+            } else {
+                hosts.add(HttpHost.create(node.getUrl()));
+            }
+        });
 
         RestClientBuilder builder = RestClient.builder(hosts.toArray(new HttpHost[hosts.size()]));
 
@@ -576,8 +581,8 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
     }
 
     @Override
-    public ESSearchHit get(String index, String id) throws IOException {
-        GetRequest request = new GetRequest(index, getDefaultTypeName(), id);
+    public ESSearchHit get(String index, String type, String id) throws IOException {
+        GetRequest request = new GetRequest(index, type, id);
         GetResponse response = client.get(request, RequestOptions.DEFAULT);
         ESSearchHit hit = new ESSearchHit();
         hit.setIndex(response.getIndex());
@@ -588,8 +593,8 @@ public class ElasticsearchClientV6 implements ElasticsearchClient {
     }
 
     @Override
-    public boolean exists(String index, String id) throws IOException {
-        return client.exists(new GetRequest(index, getDefaultTypeName(), id), RequestOptions.DEFAULT);
+    public boolean exists(String index, String type, String id) throws IOException {
+        return client.exists(new GetRequest(index, type, id), RequestOptions.DEFAULT);
     }
 
     private void createIndex(Path jobMappingDir, String elasticsearchVersion, String indexSettingsFile, String indexName) throws Exception {

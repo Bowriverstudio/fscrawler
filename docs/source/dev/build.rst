@@ -40,15 +40,12 @@ Integration tests
 When running from the command line with ``mvn`` integration tests are ran against all supported versions.
 This is done by running a Docker instance of elasticsearch using the expected version.
 
-A HTTP server is also started on port 8080 during the integration tests, alternatively the assigned port can be set with `-Dtests.rest.port=8090` argument.
-
 Run tests from your IDE
 """""""""""""""""""""""
 
 To run integration tests from your IDE, you need to start tests in ``fscrawler-it-common`` module.
 But you need first to specify the Maven profile to use and rebuild the project.
 
-* ``es-7x`` for Elasticsearch 7.x
 * ``es-6x`` for Elasticsearch 6.x
 * ``es-5x`` for Elasticsearch 5.x
 
@@ -58,14 +55,13 @@ Run tests with an external cluster
 
 To run the test suite against an elasticsearch instance running locally, just run::
 
-    mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v7
+    mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v6
 
 .. tip::
 
-    If you want to run against a version 5 or 6, run::
+    If you want to run against a version 5, run::
 
         mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v5
-        mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v6
 
 If elasticsearch is not running yet on ``http://localhost:9200``, FSCrawler project will run a Docker instance before
 the tests start.
@@ -74,7 +70,7 @@ the tests start.
 
     If you are using a secured instance, use ``tests.cluster.user``, ``tests.cluster.pass`` and ``tests.cluster.url``::
 
-        mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v7 \
+        mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v6 \
             -Dtests.cluster.user=elastic \
             -Dtests.cluster.pass=changeme \
             -Dtests.cluster.url=https://127.0.0.1:9200 \
@@ -85,35 +81,17 @@ the tests start.
     `Elasticsearch service by Elastic <https://www.elastic.co/cloud/elasticsearch-service>`_,
     you can also use ``tests.cluster.url`` to set where elasticsearch is running::
 
-        mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v7 \
+        mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v6 \
             -Dtests.cluster.user=elastic \
             -Dtests.cluster.pass=changeme \
             -Dtests.cluster.url=https://XYZ.es.io:9243
 
     Or even easier, you can use the ``Cloud ID`` available on you Cloud Console::
 
-        mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v7 \
+        mvn verify -pl fr.pilato.elasticsearch.crawler:fscrawler-it-v6 \
             -Dtests.cluster.user=elastic \
             -Dtests.cluster.pass=changeme \
             -Dtests.cluster.cloud_id=fscrawler:ZXVyb3BlLXdlc3QxLmdjcC5jbG91ZC5lcy5pbyQxZDFlYTk5Njg4Nzc0NWE2YTJiN2NiNzkzMTUzNDhhMyQyOTk1MDI3MzZmZGQ0OTI5OTE5M2UzNjdlOTk3ZmU3Nw==
-
-Using security feature
-""""""""""""""""""""""
-
-Integration tests are run by default against a standard Elasticsearch cluster, which means
-with no security feature activated.
-
-.. versionadded:: 2.7
-
-You can run all the integration tests against a secured cluster by using the ``security`` profile::
-
-    mvn verify -Psecurity
-
-Note that secured tests are using by default ``changeme`` as the password.
-You can change this by using ``tests.cluster.pass`` option::
-
-    mvn verify -Psecurity -Dtests.cluster.pass=mystrongpassword
-
 
 Tests options
 """""""""""""
@@ -133,7 +111,7 @@ Some options are available from the command line when running the tests:
 
 For example::
 
-  mvn install -rf :fscrawler-it -Dtests.output=always
+  mvn install -rf :fscrawler-it -Pes-6x -Dtests.output=always
 
 Check for vulnerabilities (CVE)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

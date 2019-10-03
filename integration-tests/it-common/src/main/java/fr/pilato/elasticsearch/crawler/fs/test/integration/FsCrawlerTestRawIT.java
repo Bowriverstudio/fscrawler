@@ -67,19 +67,17 @@ public class FsCrawlerTestRawIT extends AbstractFsCrawlerITCase {
 
         // This will cause an Elasticsearch Exception as the String is not a Date
         // If the mapping is incorrect
-        esClient.index(getCrawlerName(), "1", json1, null);
-        esClient.index(getCrawlerName(), "2", json2, null);
+        esClient.index(getCrawlerName(), typeName, "1", json1, null);
+        esClient.index(getCrawlerName(), typeName, "2", json2, null);
         esClient.flush();
     }
 
     @Test
     public void test_disable_raw() throws Exception {
-        Fs.Builder builder = startCrawlerDefinition();
-        if (rarely()) {
-            // Sometimes we explicitly disable it but this is also the default value
-            builder.setRawMetadata(false);
-        }
-        startCrawler(getCrawlerName(), builder.build(), endCrawlerDefinition(getCrawlerName()), null);
+        Fs fs = startCrawlerDefinition()
+                .setRawMetadata(false)
+                .build();
+        startCrawler(getCrawlerName(), fs, endCrawlerDefinition(getCrawlerName()), null);
         ESSearchResponse searchResponse = countTestHelper(new ESSearchRequest().withIndex(getCrawlerName()), 1L, null);
         for (ESSearchHit hit : searchResponse.getHits()) {
             assertThat(extractFromPath(hit.getSourceAsMap(), Doc.FIELD_NAMES.META).get("raw"), nullValue());
@@ -88,10 +86,12 @@ public class FsCrawlerTestRawIT extends AbstractFsCrawlerITCase {
 
     @Test
     public void test_enable_raw() throws Exception {
-        Fs fs = startCrawlerDefinition()
-                .setRawMetadata(true)
-                .build();
-        startCrawler(getCrawlerName(), fs, endCrawlerDefinition(getCrawlerName()), null);
+        Fs.Builder builder = startCrawlerDefinition();
+        if (rarely()) {
+            // Sometimes we explicitly set it but this is also the default value
+            builder.setRawMetadata(true);
+        }
+        startCrawler(getCrawlerName(), builder.build(), endCrawlerDefinition(getCrawlerName()), null);
         ESSearchResponse searchResponse = countTestHelper(new ESSearchRequest().withIndex(getCrawlerName()), 1L, null);
         for (ESSearchHit hit : searchResponse.getHits()) {
             assertThat(extractFromPath(hit.getSourceAsMap(), Doc.FIELD_NAMES.META).get("raw"), notNullValue());

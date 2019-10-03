@@ -25,6 +25,7 @@ import com.carrotsearch.randomizedtesting.annotations.ThreadLeakScope;
 import fr.pilato.elasticsearch.crawler.fs.FsCrawlerImpl;
 import fr.pilato.elasticsearch.crawler.fs.client.ESSearchRequest;
 import fr.pilato.elasticsearch.crawler.fs.client.ESSearchResponse;
+import fr.pilato.elasticsearch.crawler.fs.client.ESVersion;
 import fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClient;
 import fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClientUtil;
 import fr.pilato.elasticsearch.crawler.fs.framework.ByteSizeValue;
@@ -32,7 +33,6 @@ import fr.pilato.elasticsearch.crawler.fs.framework.TimeValue;
 import fr.pilato.elasticsearch.crawler.fs.rest.RestJsonProvider;
 import fr.pilato.elasticsearch.crawler.fs.settings.Elasticsearch;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
-import fr.pilato.elasticsearch.crawler.fs.settings.ServerUrl;
 import fr.pilato.elasticsearch.crawler.fs.test.framework.AbstractFSCrawlerTestCase;
 import fr.pilato.elasticsearch.crawler.fs.test.framework.TestContainerThreadFilter;
 import org.apache.logging.log4j.Level;
@@ -63,10 +63,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClientUtil.decodeCloudId;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.copyDefaultResources;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.copyDirs;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.unzip;
-import static fr.pilato.elasticsearch.crawler.fs.settings.ServerUrl.decodeCloudId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -99,6 +99,8 @@ public abstract class AbstractITCase extends AbstractFSCrawlerTestCase {
 
     static Path metadataDir = null;
 
+    static String typeName;
+
     FsCrawlerImpl crawler = null;
     Path currentTestResourceDir;
 
@@ -114,8 +116,8 @@ public abstract class AbstractITCase extends AbstractFSCrawlerTestCase {
     private final static String testClusterUser = System.getProperty("tests.cluster.user", DEFAULT_USERNAME);
     private final static String testClusterPass = System.getProperty("tests.cluster.pass", DEFAULT_PASSWORD);
     final static int testRestPort = Integer.parseInt(System.getProperty("tests.rest.port", DEFAULT_TEST_REST_PORT.toString()));
-
     static Elasticsearch elasticsearchWithSecurity;
+
     static WebTarget target;
     static Client client;
 
@@ -237,21 +239,17 @@ public abstract class AbstractITCase extends AbstractFSCrawlerTestCase {
     @BeforeClass
     public static void startElasticsearchRestClient() throws IOException {
         String testClusterCloudId = System.getProperty("tests.cluster.cloud_id");
-        if (testClusterCloudId != null && !testClusterCloudId.isEmpty()) {
+        if (testClusterCloudId != null) {
             testClusterUrl = decodeCloudId(testClusterCloudId);
             staticLogger.debug("Using cloud id [{}] meaning actually [{}]", testClusterCloudId, testClusterUrl);
         } else {
             testClusterUrl = System.getProperty("tests.cluster.url", DEFAULT_TEST_CLUSTER_URL);
-            if (testClusterUrl.isEmpty()) {
-                // When running from Maven CLI, tests.cluster.url is empty and not null...
-                testClusterUrl = DEFAULT_TEST_CLUSTER_URL;
-            }
         }
 
         staticLogger.info("Starting a client against [{}]", testClusterUrl);
         // We build the elasticsearch High Level Client based on the parameters
         elasticsearchWithSecurity = Elasticsearch.builder()
-                .addNode(new ServerUrl(testClusterUrl))
+                .addNode(new Elasticsearch.Node(testClusterUrl))
                 .setUsername(testClusterUser)
                 .setPassword(testClusterPass)
                 .build();
@@ -261,6 +259,8 @@ public abstract class AbstractITCase extends AbstractFSCrawlerTestCase {
 
         // We make sure the cluster is running
         testClusterRunning();
+
+        typeName = esClient.getDefaultTypeName();
     }
 
     @BeforeClass
@@ -290,7 +290,7 @@ public abstract class AbstractITCase extends AbstractFSCrawlerTestCase {
 
     private static void testClusterRunning() throws IOException {
         try {
-            String version = esClient.getVersion();
+            ESVersion version = esClient.getVersion();
             staticLogger.info("Starting integration tests against an external cluster running elasticsearch [{}]", version);
         } catch (ConnectException e) {
             // If we have an exception here, let's ignore the test
@@ -314,7 +314,7 @@ public abstract class AbstractITCase extends AbstractFSCrawlerTestCase {
     static Elasticsearch generateElasticsearchConfig(String indexName, String indexFolderName, int bulkSize,
                                                      TimeValue timeValue, ByteSizeValue byteSize) {
         Elasticsearch.Builder builder = Elasticsearch.builder()
-                .addNode(new ServerUrl(testClusterUrl))
+                .addNode(new Elasticsearch.Node(testClusterUrl))
                 .setBulkSize(bulkSize);
 
         if (indexName != null) {

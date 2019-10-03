@@ -19,19 +19,15 @@
 
 package fr.pilato.elasticsearch.crawler.fs.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import fr.pilato.elasticsearch.crawler.fs.beans.Doc;
-import fr.pilato.elasticsearch.crawler.fs.beans.DocParser;
-import fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClient;
-import fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil;
-import fr.pilato.elasticsearch.crawler.fs.framework.MetaParser;
-import fr.pilato.elasticsearch.crawler.fs.framework.SignTool;
-import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
-import fr.pilato.elasticsearch.crawler.fs.settings.ServerUrl;
-import fr.pilato.elasticsearch.crawler.fs.tika.TikaDocParser;
-import org.apache.commons.io.FilenameUtils;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
+import static fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClientUtil.decodeCloudId;
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.localDateTimeToDate;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
@@ -40,14 +36,22 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
 
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.localDateTimeToDate;
+import org.apache.commons.io.FilenameUtils;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import fr.pilato.elasticsearch.crawler.fs.beans.Doc;
+import fr.pilato.elasticsearch.crawler.fs.beans.DocParser;
+import fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClient;
+import fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil;
+import fr.pilato.elasticsearch.crawler.fs.framework.MetaParser;
+import fr.pilato.elasticsearch.crawler.fs.framework.SignTool;
+import fr.pilato.elasticsearch.crawler.fs.settings.Elasticsearch;
+import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
+import fr.pilato.elasticsearch.crawler.fs.tika.TikaDocParser;
 
 @Path("/_upload")
 public class UploadApi extends RestApi {
@@ -76,7 +80,6 @@ public class UploadApi extends RestApi {
             @QueryParam("debug") String debug,
             @QueryParam("simulate") String simulate,
             @FormDataParam("id") String id,
-            @FormDataParam("index") String index,
             @FormDataParam("tags") InputStream tags,
             @FormDataParam("file") InputStream filecontent,
             @FormDataParam("file") FormDataContentDisposition d) throws IOException, NoSuchAlgorithmException {
@@ -101,17 +104,12 @@ public class UploadApi extends RestApi {
             id = TIME_UUID_GENERATOR.getBase64UUID();
         }
 
-        //index
-        if (index == null) {
-            index = settings.getElasticsearch().getIndex();
-        }
-
         doc.getPath().setVirtual(filename);
         doc.getPath().setReal(filename);
         // Path
 
         // Read the file content
-        TikaDocParser.generate(settings, filecontent, filename, filename, doc, messageDigest, filesize);
+        TikaDocParser.generate(settings, filecontent, filename, doc, messageDigest, filesize);
 
         String url = null;
         if (Boolean.parseBoolean(simulate)) {
@@ -120,14 +118,21 @@ public class UploadApi extends RestApi {
             logger.debug("Sending document [{}] to elasticsearch.", filename);
             doc = this.getMergedJsonDoc(doc, tags);
             esClient.index(
-                    index,
+                    settings.getElasticsearch().getIndex(),
+                    esClient.getDefaultTypeName(),
                     id,
                     DocParser.toJson(doc),
                     settings.getElasticsearch().getPipeline());
             // Elasticsearch entity coordinates (we use the first node address)
-            ServerUrl node = settings.getElasticsearch().getNodes().get(0);
-            url = node.getUrl() + "/" +
-                    index + "/" +
+            Elasticsearch.Node node = settings.getElasticsearch().getNodes().get(0);
+            String nodeUrl;
+            if (node.getCloudId() != null) {
+                nodeUrl = decodeCloudId(node.getCloudId());
+            } else {
+                nodeUrl = node.getUrl();
+            }
+            url = nodeUrl + "/" +
+                    settings.getElasticsearch().getIndex() + "/" +
                     esClient.getDefaultTypeName() + "/" +
                     id;
         }

@@ -6,7 +6,6 @@ Download FSCrawler
     Depending on your Elasticsearch cluster version, you can download
     FSCrawler |version| using the following links:
 
-    * |Download_URL_V7|_ for Elasticsearch V7.
     * |Download_URL_V6|_ for Elasticsearch V6.
     * |Download_URL_V5|_ for Elasticsearch V5.
 
@@ -15,35 +14,22 @@ Download FSCrawler
     .. warning::
 
         This is a **SNAPSHOT** version.
-        You can also download a **stable** version from Maven Central:
-
-        * |Maven_Central_V7|_ for Elasticsearch V7.
-        * |Maven_Central_V6|_ for Elasticsearch V6.
-        * |Maven_Central_V5|_ for Elasticsearch V5.
+        You can also download a **stable** version from |Maven_Central|_.
 
 .. ifconfig:: release == version
 
     Depending on your Elasticsearch cluster version, you can download
     FSCrawler |version| using the following links:
 
-    * |Download_URL_V7|_ for Elasticsearch V7.
     * |Download_URL_V6|_ for Elasticsearch V6.
     * |Download_URL_V5|_ for Elasticsearch V5.
 
     .. tip::
 
         This is a **stable** version.
-        You can choose another version than |version| from Maven Central:
+        You can choose another version than |version| in |Maven_Central|_.
 
-        * |Maven_Central_V7|_ for Elasticsearch V7.
-        * |Maven_Central_V6|_ for Elasticsearch V6.
-        * |Maven_Central_V5|_ for Elasticsearch V5.
-
-        You can also download a **SNAPSHOT** version from Sonatype:
-
-        * |Sonatype_V7|_ for Elasticsearch V7.
-        * |Sonatype_V6|_ for Elasticsearch V6.
-        * |Sonatype_V5|_ for Elasticsearch V5.
+        You can also download a **SNAPSHOT** version from |Sonatype|_.
 
 The distribution contains:
 
@@ -332,16 +318,4 @@ Upgrade to 2.6
 - ``elasticsearch.nodes`` settings using ``host``, ``port`` or ``scheme`` have been replaced by
   an easier notation using ``url`` setting like ``http://127.0.0.1:9200``. You will need to modify
   your existing settings and use the new notation if warned.
-
-Upgrade to 2.7
-~~~~~~~~~~~~~~
-
-- FSCrawler comes now with an elasticsearch 7.x implementation.
-- FSCrawler also supports YAML format for jobs (default).
-- The elasticsearch 6.x implementation does not support elasticsearch versions prior to 6.7.
-If you are using an older version, it's better to upgrade or you need to "hack" the distribution
-and replace all elasticsearch/lucene jars to the 6.6 version.
-- FSCrawler does not follow symbolic links anymore. You need to set explicitly ``fs.follow_symlink``
-to ``true`` if you wish revert to the previous behavior.
-- The mapping for elasticsearch 6.x can not contain anymore the type name.
 

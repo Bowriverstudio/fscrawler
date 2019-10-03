@@ -53,7 +53,6 @@ public class RestServer {
                     .register(MultiPartFeature.class)
                     .register(RestJsonProvider.class)
                     .register(JacksonFeature.class)
-                    .register(new CORSFilter(settings.getRest()))
                     .packages("fr.pilato.elasticsearch.crawler.fs.rest");
 
             // create and start a new instance of grizzly http server

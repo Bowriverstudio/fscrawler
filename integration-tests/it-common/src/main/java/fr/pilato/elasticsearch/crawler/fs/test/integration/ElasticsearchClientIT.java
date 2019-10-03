@@ -22,6 +22,7 @@ package fr.pilato.elasticsearch.crawler.fs.test.integration;
 import fr.pilato.elasticsearch.crawler.fs.client.ESSearchRequest;
 import fr.pilato.elasticsearch.crawler.fs.client.ESSearchResponse;
 import fr.pilato.elasticsearch.crawler.fs.client.ESTermQuery;
+import fr.pilato.elasticsearch.crawler.fs.client.ESVersion;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,11 +57,9 @@ public class ElasticsearchClientIT extends AbstractITCase {
     @Test
     public void testCreateIndexWithSettings() throws IOException {
         esClient.createIndex(getCrawlerName(), false, "{\n" +
-                "  \"settings\": {\n" +
-                "    \"number_of_shards\": 1,\n" +
-                "    \"number_of_replicas\": 1\n" +
-                "  }\n" +
-                "}\n");
+                "  \"number_of_shards\": 1,\n" +
+                "  \"number_of_replicas\": 1\n" +
+                "}");
         boolean exists = esClient.isExistingIndex(getCrawlerName());
         assertThat(exists, is(true));
     }
@@ -95,8 +94,8 @@ public class ElasticsearchClientIT extends AbstractITCase {
         esClient.createIndex(getCrawlerName(), false, null);
         esClient.waitForHealthyIndex(getCrawlerName());
 
-        esClient.indexSingle(getCrawlerName(), "1", "{ \"foo\": { \"bar\": \"bar\" } }");
-        esClient.indexSingle(getCrawlerName(), "2", "{ \"foo\": { \"bar\": \"baz\" } }");
+        esClient.indexSingle(getCrawlerName(), "doc", "1", "{ \"foo\": { \"bar\": \"bar\" } }");
+        esClient.indexSingle(getCrawlerName(), "doc", "2", "{ \"foo\": { \"bar\": \"baz\" } }");
 
         esClient.refresh(getCrawlerName());
 
@@ -111,13 +110,13 @@ public class ElasticsearchClientIT extends AbstractITCase {
 
     @Test
     public void testFindVersion() throws IOException {
-        String version = esClient.getVersion();
+        ESVersion version = esClient.getVersion();
         logger.info("Current elasticsearch version: [{}]", version);
 
         // If we did not use an external URL but the docker instance we can test for sure that the version is the expected one
-        if (System.getProperty("tests.cluster.url") == null) {
+        if (System.getProperty("tests.cluster.host") == null) {
             Properties properties = readPropertiesFromClassLoader("elasticsearch.version.properties");
-            assertThat(version, is(properties.getProperty("version")));
+            assertThat(version.toString(), is(properties.getProperty("version")));
         }
     }
 

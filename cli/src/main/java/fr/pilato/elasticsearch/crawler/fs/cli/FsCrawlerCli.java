@@ -23,6 +23,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import fr.pilato.elasticsearch.crawler.fs.FsCrawlerImpl;
 import fr.pilato.elasticsearch.crawler.fs.beans.FsJobFileHandler;
+import fr.pilato.elasticsearch.crawler.fs.client.ESVersion;
 import fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil;
 import fr.pilato.elasticsearch.crawler.fs.framework.MetaFileHandler;
 import fr.pilato.elasticsearch.crawler.fs.rest.RestServer;
@@ -40,6 +41,8 @@ import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,7 +50,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.copyDefaultResources;
-import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.extractMajorVersion;
+import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.moveLegacyResource;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.readDefaultJsonVersionedFile;
 
 /**
@@ -154,6 +157,9 @@ public class FsCrawlerCli {
         // We copy default mapping and settings to the default settings dir .fscrawler/_default/
         copyDefaultResources(configDir);
 
+        // We move the legacy stuff which might come from version 2.0
+        moveLegacyResources(configDir);
+
         FsSettings fsSettings;
         FsSettingsFileHandler fsSettingsFileHandler = new FsSettingsFileHandler(configDir);
 
@@ -232,14 +238,14 @@ public class FsCrawlerCli {
                         .build();
                 fsSettingsFileHandler.write(fsSettings);
 
-                Path config = configDir.resolve(jobName).resolve(FsSettingsFileHandler.SETTINGS_YAML);
+                Path config = configDir.resolve(jobName).resolve(FsSettingsFileHandler.FILENAME);
                 logger.info("Settings have been created in [{}]. Please review and edit before relaunch", config);
             }
 
             return;
         }
 
-        logger.trace("settings used for this crawler: [{}]", FsSettingsParser.toYaml(fsSettings));
+        logger.trace("settings used for this crawler: [{}]", FsSettingsParser.toJson(fsSettings));
         if (FsCrawlerValidator.validateSettings(logger, fsSettings, commands.rest)) {
             // We don't go further as we have critical errors
             return;
@@ -265,7 +271,7 @@ public class FsCrawlerCli {
                     logger.fatal("We can not start Elasticsearch Client. Exiting.", t);
                     return;
                 }
-                String elasticsearchVersion = fsCrawler.getEsClient().getVersion();
+                ESVersion elasticsearchVersion = fsCrawler.getEsClient().getVersion();
                 checkForDeprecatedResources(configDir, elasticsearchVersion);
                 fsCrawler.start();
 
@@ -287,17 +293,42 @@ public class FsCrawlerCli {
         }
     }
 
-    private static void checkForDeprecatedResources(Path configDir, String elasticsearchVersion) throws IOException {
+    static void moveLegacyResources(Path root) {
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(root)) {
+            for (Path path : directoryStream) {
+                String fileName = path.getFileName().toString();
+                if (fileName.endsWith(FsJobFileHandler.LEGACY_EXTENSION)) {
+                    // We have a Legacy Job Settings file {job_name.json} which needs to move to job_name/_settings.json
+                    String jobName = fileName.substring(0, fileName.length() - FsJobFileHandler.LEGACY_EXTENSION.length());
+                    Path jobDir = root.resolve(jobName);
+                    Files.createDirectories(jobDir);
+                    Path destination = jobDir.resolve(FsJobFileHandler.FILENAME);
+                    moveLegacyResource(path, destination);
+                } else if (fileName.endsWith(FsSettingsFileHandler.LEGACY_EXTENSION)) {
+                    // We have a Legacy Job Settings file {job_name.json} which needs to move to job_name/_settings.json
+                    String jobName = fileName.substring(0, fileName.length() - FsSettingsFileHandler.LEGACY_EXTENSION.length());
+                    Path jobDir = root.resolve(jobName);
+                    Files.createDirectories(jobDir);
+                    Path destination = jobDir.resolve(FsSettingsFileHandler.FILENAME);
+                    moveLegacyResource(path, destination);
+                }
+            }
+        } catch (IOException e) {
+            logger.warn("Got error while moving legacy content", e);
+        }
+    }
+
+    private static void checkForDeprecatedResources(Path configDir, ESVersion elasticsearchVersion) throws IOException {
         try {
             // If we are able to read an old configuration file, we should tell the user to check the documentation
-            readDefaultJsonVersionedFile(configDir, extractMajorVersion(elasticsearchVersion), "doc");
+            readDefaultJsonVersionedFile(configDir, Byte.toString(elasticsearchVersion.major), "doc");
             logger.warn("We found old configuration index settings: [{}/_default/doc.json]. You should look at the documentation" +
                     " about upgrades: https://fscrawler.readthedocs.io/en/latest/installation.html#upgrade-fscrawler.",
                     configDir);
         } catch (IllegalArgumentException ignored) { }
         try {
             // If we are able to read an old configuration file, we should tell the user to check the documentation
-            readDefaultJsonVersionedFile(configDir, extractMajorVersion(elasticsearchVersion), "folder");
+            readDefaultJsonVersionedFile(configDir, Byte.toString(elasticsearchVersion.major), "folder");
             logger.warn("We found old configuration index settings: [{}/_default/folder.json]. You should look at the documentation" +
                     " about upgrades: https://fscrawler.readthedocs.io/en/latest/installation.html#upgrade-fscrawler.",
                     configDir);

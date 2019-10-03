@@ -6,7 +6,7 @@
     <parent>
         <groupId>fr.pilato.elasticsearch.crawler</groupId>
         <artifactId>fscrawler-it</artifactId>
-        <version>2.7-SNAPSHOT</version>
+        <version>2.6</version>
     </parent>
 
     <artifactId>fscrawler-it-common</artifactId>
@@ -52,6 +52,16 @@
     </dependencies>
 
     <build>
+        <!-- No need to start Fabric8 in the it-common module as tests are not ran from here with the CLI -->
+        <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
         <testResources>
             <testResource>
                 <directory>src/main/resources-binary</directory>
@@ -65,19 +75,6 @@
     </build>
 
     <profiles>
-        <!-- We are building a profile that can be activated from the IDE -->
-        <profile>
-            <id>es-7x</id>
-            <properties>
-                <integ.elasticsearch.version>${elasticsearch7.version}</integ.elasticsearch.version>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>fr.pilato.elasticsearch.crawler</groupId>
-                    <artifactId>fscrawler-elasticsearch-client-v7</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
         <!-- We are building a profile that can be activated from the IDE -->
         <profile>
             <id>es-6x</id>

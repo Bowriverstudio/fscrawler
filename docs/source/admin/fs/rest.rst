@@ -55,8 +55,7 @@ It will give you a response similar to:
          "username" : "elastic"
        },
        "rest" : {
-         "url" : "http://127.0.0.1:8080/fscrawler",
-         "enable_cors": false
+         "url" : "http://127.0.0.1:8080/fscrawler"
        }
      }
    }
@@ -251,52 +250,16 @@ The field ``external`` doesn't necessarily be a flat structure. This is a more a
 
 .. attention:: Only standard :ref:`FSCrawler fields <generated_fields>` can be set outside ``external`` field name.
 
-
-Specifying an elasticsearch index
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-By default, fscrawler creates document in the index defined in the ``_settings.yaml`` file.
-However, using the REST service, it is possible to require fscrawler to use different indexes, by adding ``index=YOUR_INDEX`` in the form data:
-
-.. code:: sh
-
-   echo "This is my text" > test.txt
-   curl -F "file=@test.txt" -F "index=my-index" "http://127.0.0.1:8080/fscrawler/_upload"
-
-
-Enabling CORS
-~~~~~~~~~~~~~
-To enable Cross-Origin Request Sharing you will need to set ``enable_cors: true``
-under ``rest`` in your job settings. Doing so will enable the relevant access headers
-on all REST service resource responses (for example ``/fscrawler`` and ``/fscrawler/_upload``).
-
-You can check if CORS is enabled with:
-
-.. code:: sh
-
-   curl -I http://127.0.0.1:8080/fscrawler/
-
-The response header should contain ``Access-Control-Allow-*`` parameters like:
-::
-
-   Access-Control-Allow-Origin: *
-   Access-Control-Allow-Headers: origin, content-type, accept, authorization
-   Access-Control-Allow-Credentials: true
-   Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD
-
 REST settings
 ~~~~~~~~~~~~~
 
 Here is a list of REST service settings (under ``rest.`` prefix)`:
 
-+----------------------+-------------------------------------+-------------------------------------------------------+
-| Name                 | Default value                       | Documentation                                         |
-+======================+=====================================+=======================================================+
-| ``rest.url``         | ``http://127.0.0.1:8080/fscrawler`` | Rest Service URL                                      |
-+----------------------+-------------------------------------+-------------------------------------------------------+
-| ``rest.enable_cors`` | ``false``                           | Enables or disables Cross-Origin Resource Sharing     |
-|                      |                                     | globally for all resources                            |
-+----------------------+-------------------------------------+-------------------------------------------------------+
++--------------+-------------------------------------+-----------------------+
+| Name         | Default value                       | Documentation         |
++==============+=====================================+=======================+
+| ``rest.url`` | ``http://127.0.0.1:8080/fscrawler`` | Rest Service URL      |
++--------------+-------------------------------------+-----------------------+
 
 .. tip::
 
@@ -309,11 +272,14 @@ REST service is running at http://127.0.0.1:8080/fscrawler by default.
 
 You can change it using ``rest`` settings:
 
-.. code:: yaml
+.. code:: json
 
-   name: "test"
-   rest:
-     url: "http://192.168.0.1:8180/my_fscrawler"
+   {
+     "name" : "test",
+     "rest" : {
+       "url" : "http://192.168.0.1:8180/my_fscrawler"
+     }
+   }
 
 It also means that if you are running more than one instance of FS
 crawler locally, you can (must) change the port as it will conflict.

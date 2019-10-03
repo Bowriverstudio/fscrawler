@@ -22,8 +22,6 @@ package fr.pilato.elasticsearch.crawler.fs.settings;
 import fr.pilato.elasticsearch.crawler.fs.framework.ByteSizeValue;
 import fr.pilato.elasticsearch.crawler.fs.framework.Percentage;
 import fr.pilato.elasticsearch.crawler.fs.framework.TimeValue;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -33,12 +31,11 @@ import java.util.Objects;
 
 @SuppressWarnings("SameParameterValue")
 public class Fs {
-    protected static final Logger logger = LogManager.getLogger(Fs.class);
-
     private String url;
     private TimeValue updateRate = TimeValue.timeValueMinutes(15);
     private List<String> includes = null;
     private List<String> excludes = null;
+    private List<String> customOcrIncludes = null;
     private List<String> filters = null;
     private boolean jsonSupport = false;
     private boolean filenameAsId = false;
@@ -55,9 +52,13 @@ public class Fs {
     private boolean indexFolders = true;
     private boolean langDetect = false;
     private boolean continueOnError = false;
+    private boolean pdfOcr = true;
     private Ocr ocr = new Ocr();
     private ByteSizeValue ignoreAbove = null;
-    private boolean followSymlinks = false;
+    private boolean customOcrEnabled = false;
+    private String customOcrProviderName = null;
+	private String customOcrSubscriptionKey = null;
+	private String customOcrProviderUrl = null;
 
     public static Builder builder() {
         return new Builder();
@@ -72,6 +73,7 @@ public class Fs {
         private TimeValue updateRate = TimeValue.timeValueMinutes(15);
         private List<String> includes = null;
         private List<String> excludes = null;
+        private List<String> customOcrIncludes = null;
         private List<String> filters = null;
         private boolean jsonSupport = false;
         private boolean filenameAsId = false;
@@ -82,15 +84,19 @@ public class Fs {
         private boolean indexContent = true;
         private Percentage indexedChars = null;
         private boolean attributesSupport = false;
-        private boolean rawMetadata = false;
+        private boolean rawMetadata = true;
         private String checksum = null;
         private boolean xmlSupport = false;
         private boolean indexFolders = true;
         private boolean langDetect = false;
         private boolean continueOnError = false;
+        private boolean pdfOcr = true;
         private Ocr ocr = new Ocr();
         private ByteSizeValue ignoreAbove = null;
-        private boolean followSymlinks = false;
+        private boolean customOcrEnabled = false;
+        private String customOcrProviderName = null;
+    	private String customOcrSubscriptionKey = null;
+    	private String customOcrProviderUrl = null;
 
         public Builder setUrl(String url) {
             this.url = url;
@@ -137,6 +143,24 @@ public class Fs {
 
             return this;
         }
+        
+        public Builder setCustomOcrIncludes(List<String> customOcrIncludes) {
+            this.customOcrIncludes = customOcrIncludes;
+            return this;
+        }
+        
+        public Builder addCustomOcrIncludes(String customOcrInclude) {
+            if (this.customOcrIncludes == null) {
+                this.customOcrIncludes = new ArrayList<>();
+            }
+
+            // We refuse to add duplicates
+            if (!this.customOcrIncludes.contains(customOcrInclude)) {
+                this.customOcrIncludes.add(customOcrInclude);
+            }
+            return this;
+        }
+        
 
         public Builder setFilters(List<String> filters) {
             this.filters = filters;
@@ -231,6 +255,11 @@ public class Fs {
             return this;
         }
 
+        public Builder setPdfOcr(boolean pdfOcr) {
+            this.pdfOcr = pdfOcr;
+            return this;
+        }
+
         public Builder setOcr(Ocr ocr) {
             this.ocr = ocr;
             return this;
@@ -240,16 +269,33 @@ public class Fs {
             this.ignoreAbove = ignoreAbove;
             return this;
         }
-
-        public Builder setFollowSymlinks(boolean followSymlinks) {
-            this.followSymlinks = followSymlinks;
+        
+        public Builder setCustomOcrEnabled(boolean customOcrEnabled) {
+            this.customOcrEnabled = customOcrEnabled;
             return this;
         }
+        
+        public Builder setCustomOcrProviderName(String customOcrProviderName) {
+            this.customOcrProviderName = customOcrProviderName;
+            return this;
+        }
+        
+        public Builder setCustomOcrSubscriptionKey(String customOcrSubscriptionKey) {
+            this.customOcrSubscriptionKey = customOcrSubscriptionKey;
+            return this;
+        }
+        
+        public Builder setCustomOcrProviderUrl(String customOcrProviderUrl) {
+            this.customOcrProviderUrl = customOcrProviderUrl;
+            return this;
+        }
+        
 
         public Fs build() {
-            return new Fs(url, updateRate, includes, excludes, filters, jsonSupport, filenameAsId, addFilesize,
+            return new Fs(url, updateRate, includes, excludes, customOcrIncludes, filters, jsonSupport, filenameAsId, addFilesize,
                     removeDeleted, addAsInnerObject, storeSource, indexedChars, indexContent, attributesSupport, rawMetadata,
-                    checksum, xmlSupport, indexFolders, langDetect, continueOnError, ocr, ignoreAbove, followSymlinks);
+                    checksum, xmlSupport, indexFolders, langDetect, continueOnError, pdfOcr, ocr, ignoreAbove, customOcrEnabled,
+                    customOcrProviderName, customOcrSubscriptionKey, customOcrProviderUrl);
         }
     }
 
@@ -257,13 +303,15 @@ public class Fs {
 
     }
 
-    private Fs(String url, TimeValue updateRate, List<String> includes, List<String> excludes, List<String> filters, boolean jsonSupport,
+    private Fs(String url, TimeValue updateRate, List<String> includes, List<String> customOcrIncludes, List<String> excludes, List<String> filters, boolean jsonSupport,
                boolean filenameAsId, boolean addFilesize, boolean removeDeleted, boolean addAsInnerObject, boolean storeSource,
                Percentage indexedChars, boolean indexContent, boolean attributesSupport, boolean rawMetadata, String checksum, boolean xmlSupport,
-               boolean indexFolders, boolean langDetect, boolean continueOnError, Ocr ocr, ByteSizeValue ignoreAbove, boolean followSymlinks) {
+               boolean indexFolders, boolean langDetect, boolean continueOnError, boolean pdfOcr, Ocr ocr, ByteSizeValue ignoreAbove, boolean customOcrEnabled,
+               String customOcrProviderName, String customOcrSubscriptionKey, String customOcrProviderUrl) {
         this.url = url;
         this.updateRate = updateRate;
         this.includes = includes;
+        this.customOcrIncludes = customOcrIncludes;
         this.excludes = excludes;
         this.filters = filters;
         this.jsonSupport = jsonSupport;
@@ -281,9 +329,13 @@ public class Fs {
         this.indexFolders = indexFolders;
         this.langDetect = langDetect;
         this.continueOnError = continueOnError;
+        this.pdfOcr = pdfOcr;
         this.ocr = ocr;
         this.ignoreAbove = ignoreAbove;
-        this.followSymlinks = followSymlinks;
+        this.customOcrEnabled = customOcrEnabled;
+        this.customOcrProviderName = customOcrProviderName;
+        this.customOcrSubscriptionKey = customOcrSubscriptionKey;
+        this.customOcrProviderUrl = customOcrProviderUrl;
     }
 
     public String getUrl() {
@@ -446,20 +498,12 @@ public class Fs {
         this.continueOnError = continueOnError;
     }
 
-    @Deprecated
-    public void setPdfOcr(boolean pdfOcr) {
-        String strategy;
-        if (pdfOcr) {
-            strategy = "ocr_and_text";
-        } else {
-            strategy = "no_ocr";
-        }
-        logger.warn("pdf_ocr setting has been deprecated and is replaced by ocr.pdf_strategy: {}.", strategy);
-        if (this.ocr == null) {
-            this.ocr = new Ocr();
-        }
+    public boolean isPdfOcr() {
+        return pdfOcr;
+    }
 
-        this.ocr.setPdfStrategy(strategy);
+    public void setPdfOcr(boolean pdfOcr) {
+        this.pdfOcr = pdfOcr;
     }
 
     public Ocr getOcr() {
@@ -477,16 +521,48 @@ public class Fs {
     public void setIgnoreAbove(ByteSizeValue ignoreAbove) {
         this.ignoreAbove = ignoreAbove;
     }
+    
+    public boolean customOcrEnabled() {
+		return customOcrEnabled;
+	}
 
-    public boolean isFollowSymlinks() {
-        return followSymlinks;
-    }
+	public void setCustomOcrEnabled(boolean customOcrEnabled) {
+		this.customOcrEnabled = customOcrEnabled;
+	}
 
-    public void setFollowSymlinks(boolean followSymlinks) {
-        this.followSymlinks = followSymlinks;
-    }
+	public String getCustomOcrProviderName() {
+		return customOcrProviderName;
+	}
 
-    @Override
+	public void setCustomOcrProviderName(String customOcrProviderName) {
+		this.customOcrProviderName = customOcrProviderName;
+	}
+
+	public String getCustomOcrSubscriptionKey() {
+		return customOcrSubscriptionKey;
+	}
+
+	public void setCustomOcrSubscriptionKey(String customOcrSubscriptionKey) {
+		this.customOcrSubscriptionKey = customOcrSubscriptionKey;
+	}
+	
+	public List<String> getCustomOcrIncludes() {
+		return customOcrIncludes;
+	}
+
+	public void setCustomOcrIncludes(List<String> customOcrIncludes) {
+		this.customOcrIncludes = customOcrIncludes;
+	}
+
+	public String getCustomOcrProviderUrl() {
+		return customOcrProviderUrl;
+	}
+
+	public void setCustomOcrProviderUrl(String customOcrProviderUrl) {
+		this.customOcrProviderUrl = customOcrProviderUrl;
+	}
+
+	@Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -504,23 +580,29 @@ public class Fs {
                 indexFolders == fs.indexFolders &&
                 langDetect == fs.langDetect &&
                 continueOnError == fs.continueOnError &&
-                followSymlinks == fs.followSymlinks &&
+                pdfOcr == fs.pdfOcr &&
                 Objects.equals(url, fs.url) &&
                 Objects.equals(updateRate, fs.updateRate) &&
                 Objects.equals(includes, fs.includes) &&
+                Objects.equals(customOcrIncludes, fs.customOcrIncludes) &&
                 Objects.equals(excludes, fs.excludes) &&
                 Objects.equals(filters, fs.filters) &&
                 Objects.equals(indexedChars, fs.indexedChars) &&
                 Objects.equals(checksum, fs.checksum) &&
                 Objects.equals(ocr, fs.ocr) &&
-                Objects.equals(ignoreAbove, fs.ignoreAbove);
+                Objects.equals(ignoreAbove, fs.ignoreAbove) &&
+        		Objects.equals(customOcrEnabled, fs.customOcrEnabled) &&
+        		Objects.equals(customOcrProviderName, fs.customOcrProviderName) &&
+        		Objects.equals(customOcrSubscriptionKey, fs.customOcrSubscriptionKey) &&
+        		Objects.equals(customOcrProviderUrl, fs.customOcrProviderUrl);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(url, updateRate, includes, excludes, filters, jsonSupport, filenameAsId, addFilesize,
-                removeDeleted, addAsInnerObject, storeSource, indexContent, indexedChars, attributesSupport, rawMetadata, xmlSupport,
-                checksum, indexFolders, langDetect, continueOnError, ocr, ignoreAbove, followSymlinks);
+        return Objects.hash(url, updateRate, includes, customOcrIncludes, excludes, filters, jsonSupport, filenameAsId, addFilesize,
+                removeDeleted, addAsInnerObject, storeSource, indexContent, indexedChars, attributesSupport, rawMetadata, 
+                xmlSupport, checksum, indexFolders, langDetect, continueOnError, pdfOcr, ocr, ignoreAbove, customOcrEnabled,
+                customOcrProviderName, customOcrSubscriptionKey, customOcrProviderUrl);
     }
 
     @Override
@@ -528,6 +610,7 @@ public class Fs {
         return "Fs{" + "url='" + url + '\'' +
                 ", updateRate=" + updateRate +
                 ", includes=" + includes +
+                ", customOcrIncludes=" + customOcrIncludes +
                 ", excludes=" + excludes +
                 ", filters=" + filters +
                 ", jsonSupport=" + jsonSupport +
@@ -545,9 +628,13 @@ public class Fs {
                 ", indexFolders=" + indexFolders +
                 ", langDetect=" + langDetect +
                 ", continueOnError=" + continueOnError +
+                ", pdfOcr=" + pdfOcr +
                 ", ocr=" + ocr +
-                ", ignoreAbove=" + ignoreAbove +
-                ", followSymlinks=" + followSymlinks +
+                ", ignoreAbove=" + ignoreAbove  +
+                ", customOcrEnabled=" + customOcrEnabled +
+                ", customOcrProviderName=" + customOcrProviderName +
+                ", customOcrSubscriptionKey=" + customOcrSubscriptionKey +
+                ", customOcrProviderUrl=" + customOcrProviderUrl +
                 '}';
     }
 }

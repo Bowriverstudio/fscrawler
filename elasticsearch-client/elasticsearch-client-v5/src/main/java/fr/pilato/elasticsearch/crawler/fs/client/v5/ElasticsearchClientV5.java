@@ -32,6 +32,7 @@ import fr.pilato.elasticsearch.crawler.fs.client.ESSearchRequest;
 import fr.pilato.elasticsearch.crawler.fs.client.ESSearchResponse;
 import fr.pilato.elasticsearch.crawler.fs.client.ESTermQuery;
 import fr.pilato.elasticsearch.crawler.fs.client.ESTermsAggregation;
+import fr.pilato.elasticsearch.crawler.fs.client.ESVersion;
 import fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClient;
 import fr.pilato.elasticsearch.crawler.fs.framework.JsonUtil;
 import fr.pilato.elasticsearch.crawler.fs.settings.Elasticsearch;
@@ -91,6 +92,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
+import static fr.pilato.elasticsearch.crawler.fs.client.ElasticsearchClientUtil.decodeCloudId;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.INDEX_SETTINGS_FILE;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.INDEX_SETTINGS_FOLDER_FILE;
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.isNullOrEmpty;
@@ -123,8 +125,8 @@ public class ElasticsearchClientV5 implements ElasticsearchClient {
     }
 
     @Override
-    public String compatibleVersion() {
-        return "5";
+    public byte compatibleVersion() {
+        return 5;
     }
 
     @Override
@@ -166,9 +168,9 @@ public class ElasticsearchClientV5 implements ElasticsearchClient {
     }
 
     @Override
-    public String getVersion() throws IOException {
+    public ESVersion getVersion() throws IOException {
         Version version = client.info().getVersion();
-        return version.toString();
+        return ESVersion.fromString(version.toString());
     }
 
     class DebugListener implements BulkProcessor.Listener {
@@ -219,7 +221,8 @@ public class ElasticsearchClientV5 implements ElasticsearchClient {
             logger.trace("create index response: {}", asMap(response));
         } catch (ResponseException e) {
             if (e.getResponse().getStatusLine().getStatusCode() == 400 &&
-                    (e.getMessage().contains("index_already_exists_exception"))) {
+                    (e.getMessage().contains("index_already_exists_exception") || // ES 5.x
+                            e.getMessage().contains("IndexAlreadyExistsException") )) { // ES 1.x and 2.x
                 if (!ignoreErrors) {
                     throw new RuntimeException("index already exists");
                 }
@@ -228,7 +231,6 @@ public class ElasticsearchClientV5 implements ElasticsearchClient {
             }
             throw e;
         }
-        waitForHealthyIndex(index);
     }
 
     /**
@@ -370,20 +372,20 @@ public class ElasticsearchClientV5 implements ElasticsearchClient {
     }
 
     @Override
-    public void index(String index, String id, String json, String pipeline) {
-        bulkProcessor.add(new IndexRequest(index, getDefaultTypeName(), id).setPipeline(pipeline).source(json, XContentType.JSON));
+    public void index(String index, String type, String id, String json, String pipeline) {
+        bulkProcessor.add(new IndexRequest(index, type, id).setPipeline(pipeline).source(json, XContentType.JSON));
     }
 
     @Override
-    public void indexSingle(String index, String id, String json) throws IOException {
-        IndexRequest request = new IndexRequest(index, getDefaultTypeName(), id);
+    public void indexSingle(String index, String type, String id, String json) throws IOException {
+        IndexRequest request = new IndexRequest(index, type, id);
         request.source(json, XContentType.JSON);
         client.index(request);
     }
 
     @Override
-    public void delete(String index, String id) {
-        bulkProcessor.add(new DeleteRequest(index, getDefaultTypeName(), id));
+    public void delete(String index, String type, String id) {
+        bulkProcessor.add(new DeleteRequest(index, type, id));
     }
 
     @Override
@@ -407,7 +409,14 @@ public class ElasticsearchClientV5 implements ElasticsearchClient {
 
     private static RestClientBuilder buildRestClient(Elasticsearch settings) {
         List<HttpHost> hosts = new ArrayList<>(settings.getNodes().size());
-        settings.getNodes().forEach(node -> hosts.add(HttpHost.create(node.decodedUrl())));
+        settings.getNodes().forEach(node -> {
+            if (node.getCloudId() != null) {
+                // We have a cloud id which simplifies all
+                hosts.add(HttpHost.create(decodeCloudId(node.getCloudId())));
+            } else {
+                hosts.add(HttpHost.create(node.getUrl()));
+            }
+        });
 
         RestClientBuilder builder = RestClient.builder(hosts.toArray(new HttpHost[hosts.size()]));
 
@@ -584,8 +593,8 @@ public class ElasticsearchClientV5 implements ElasticsearchClient {
     }
 
     @Override
-    public ESSearchHit get(String index, String id) throws IOException {
-        GetRequest request = new GetRequest(index, getDefaultTypeName(), id);
+    public ESSearchHit get(String index, String type, String id) throws IOException {
+        GetRequest request = new GetRequest(index, type, id);
         GetResponse response = client.get(request);
         ESSearchHit hit = new ESSearchHit();
         hit.setIndex(response.getIndex());
@@ -596,8 +605,8 @@ public class ElasticsearchClientV5 implements ElasticsearchClient {
     }
 
     @Override
-    public boolean exists(String index, String id) throws IOException {
-        return client.exists(new GetRequest(index, getDefaultTypeName(), id));
+    public boolean exists(String index, String type, String id) throws IOException {
+        return client.exists(new GetRequest(index, type, id));
     }
 
     private void createIndex(Path jobMappingDir, String elasticsearchVersion, String indexSettingsFile, String indexName) throws Exception {

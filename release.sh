@@ -122,7 +122,7 @@ echo "Changing maven version to $RELEASE_VERSION..."
 mvn versions:set -DnewVersion=${RELEASE_VERSION} >> /tmp/fscrawler-${RELEASE_VERSION}.log
 
 # We need to also commit files that changed for documentation
-mvn clean process-resources >> /tmp/fscrawler-${RELEASE_VERSION}.log
+mvn clean generate-sources >> /tmp/fscrawler-${RELEASE_VERSION}.log
 
 # Git commit release
 git commit -q -a -m "prepare release fscrawler-$RELEASE_VERSION"
@@ -179,7 +179,7 @@ fi
 echo "Changing maven version to $NEXT_VERSION..."
 mvn versions:set -DnewVersion=${NEXT_VERSION} >> /tmp/fscrawler-${RELEASE_VERSION}.log
 # We need to also commit files that changed for documentation
-mvn clean process-resources >> /tmp/fscrawler-${RELEASE_VERSION}.log
+mvn clean generate-sources >> /tmp/fscrawler-${RELEASE_VERSION}.log
 git commit -q -a -m "prepare for next development iteration"
 
 # git checkout branch we started from
@@ -217,7 +217,7 @@ then
             git checkout -q fscrawler-${RELEASE_VERSION}
             SMTP_USERNAME=$(readvalue "Enter your SMTP username" "david@pilato.fr")
             SMTP_PASSWORD=$(readvalue "Enter your SMTP password" "")
-            mvn changes:announcement-mail -Dchanges.username=${SMTP_USERNAME} -Dchanges.password=${SMTP_PASSWORD} >> /tmp/fscrawler-${RELEASE_VERSION}.log
+            mvn changes:announcement-mail -Dchanges.username='${SMTP_USERNAME}' -Dchanges.password='${SMTP_PASSWORD}' >> /tmp/fscrawler-${RELEASE_VERSION}.log
             git checkout -q ${CURRENT_BRANCH}
         else
             echo "Message not sent. You can send it manually using:"

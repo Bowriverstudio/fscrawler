@@ -22,13 +22,10 @@ package fr.pilato.elasticsearch.crawler.fs.crawler.fs;
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractModel;
 import fr.pilato.elasticsearch.crawler.fs.crawler.FileAbstractor;
 import fr.pilato.elasticsearch.crawler.fs.settings.FsSettings;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,8 +39,6 @@ import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getModi
 import static fr.pilato.elasticsearch.crawler.fs.framework.FsCrawlerUtil.getOwnerName;
 
 public class FileAbstractorFile extends FileAbstractor<File> {
-    private final Logger logger = LogManager.getLogger(FileAbstractorFile.class);
-
     public FileAbstractorFile(FsSettings fsSettings) {
         super(fsSettings);
     }
@@ -73,11 +68,7 @@ public class FileAbstractorFile extends FileAbstractor<File> {
     @Override
     public Collection<FileAbstractModel> getFiles(String dir) {
         logger.debug("Listing local files from {}", dir);
-
-        File[] files = new File(dir).listFiles(file -> {
-            if (fsSettings.getFs().isFollowSymlinks()) return true;
-            return !Files.isSymbolicLink(file.toPath());
-        });
+        File[] files = new File(dir).listFiles();
         Collection<FileAbstractModel> result;
 
         if (files != null) {

@@ -256,6 +256,8 @@ public class FsCrawlerUtil {
      *                we consider it always matches.
      */
     public static boolean isIndexable(String content, List<String> filters) {
+        logger.debug("content = [{}], filters = {}", content, filters);
+
         if (isNullOrEmpty(content)) {
             logger.trace("Null or empty content always matches.");
             return true;
@@ -266,7 +268,6 @@ public class FsCrawlerUtil {
             return true;
         }
 
-        logger.trace("content = [{}], filters = {}", content, filters);
         for (String filter : filters) {
             Pattern pattern = Pattern.compile(filter, Pattern.MULTILINE | Pattern.UNIX_LINES);
             logger.trace("Testing filter [{}]", filter);
@@ -335,9 +336,6 @@ public class FsCrawlerUtil {
     }
 
     public static Date localDateTimeToDate(LocalDateTime ldt) {
-        if (ldt == null) {
-            return null;
-        }
         return Date.from(ldt.atZone(TimeZone.getDefault().toZoneId()).toInstant());
     }
 
@@ -427,8 +425,7 @@ public class FsCrawlerUtil {
     public static final String[] MAPPING_RESOURCES = {
             "2/_settings.json", "2/_settings_folder.json",
             "5/_settings.json", "5/_settings_folder.json",
-            "6/_settings.json", "6/_settings_folder.json",
-            "7/_settings.json", "7/_settings_folder.json"
+            "6/_settings.json", "6/_settings_folder.json"
     };
 
     /**
@@ -449,6 +446,20 @@ public class FsCrawlerUtil {
                 logger.debug("Copying [{}]...", filename);
                 copyResourceFile(CLASSPATH_RESOURCES_ROOT + filename, target);
             }
+        }
+    }
+
+    /**
+     * Move a Legacy resource to another destination if needed
+     * @param legacy Legacy file
+     * @param destinationFile New file name (directory must exist)
+     * @throws IOException In case moving file did not work
+     */
+    public static void moveLegacyResource(Path legacy, Path destinationFile) throws IOException {
+        if (Files.exists(legacy)) {
+            logger.debug("Found a legacy file at [{}]", legacy);
+            Files.move(legacy, destinationFile);
+            logger.info("Moved Legacy file from [{}] to [{}]", legacy, destinationFile);
         }
     }
 
@@ -621,13 +632,5 @@ public class FsCrawlerUtil {
         }
 
         return result;
-    }
-
-    public static String extractMajorVersion(String version) {
-        return version.split("\\.")[0];
-    }
-
-    public static String extractMinorVersion(String version) {
-        return version.split("\\.")[1];
     }
 }
