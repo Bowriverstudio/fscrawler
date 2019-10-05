@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>fr.pilato.elasticsearch.crawler</groupId>
+        <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
         <artifactId>fscrawler-it</artifactId>
         <version>2.6</version>
     </parent>
@@ -18,12 +18,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>fr.pilato.elasticsearch.crawler</groupId>
+            <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
             <artifactId>fscrawler-it-common</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>fr.pilato.elasticsearch.crawler</groupId>
+            <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
             <artifactId>fscrawler-elasticsearch-client-v5</artifactId>
             <scope>test</scope>
         </dependency>

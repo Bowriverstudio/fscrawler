@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>fr.pilato.elasticsearch.crawler</groupId>
+    <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
     <artifactId>fscrawler-parent</artifactId>
     <packaging>pom</packaging>
     <version>2.6</version>
@@ -22,8 +22,8 @@
         <module>rest</module>
     </modules>
     <name>FSCrawler</name>
-    <url>https://github.com/dadoonet/fscrawler/</url>
-    <description>FS Crawler offers a simple way to index binary files into elasticsearch.</description>
+    <url>https://github.com/Bowriverstudio/fscrawler</url>
+    <description>FS Crawler with custom OCR(Microsoft Computer Vision) offers a simple way to index binary files into elasticsearch.</description>
 
     <licenses>
         <license>
@@ -87,23 +87,23 @@
 
     <developers>
         <developer>
-            <id>dadoonet</id>
-            <name>David Pilato</name>
-            <email>david@pilato.fr</email>
-            <url>https://david.pilato.fr/</url>
-            <timezone>+1</timezone>
+            <id>rameshthumati</id>
+            <name>Ramesh Thumati</name>
+            <email>ramesh.t@softsuave.com</email>
+            <url>https://www.softsuave.com</url>
+            <timezone>+5:30</timezone>
         </developer>
     </developers>
 
-    <scm>
-        <connection>scm:git:git@github.com:dadoonet/fscrawler.git</connection>
-        <url>scm:git:git@github.com:dadoonet/fscrawler.git</url>
-        <developerConnection>scm:git:git@github.com:dadoonet/fscrawler.git</developerConnection>
+     <scm>
+        <connection>scm:git:git@github.com:Bowriverstudio/fscrawler.git</connection>
+        <url>scm:git:git@github.com:Bowriverstudio/fscrawler.git</url>
+        <developerConnection>scm:git:git@github.com:Bowriverstudio/fscrawler.git</developerConnection>
     </scm>
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/dadoonet/fscrawler/issues/</url>
+        <url>https://github.com/Bowriverstudio/fscrawler/</url>
     </issueManagement>
 
     <build>
@@ -379,92 +379,92 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-framework</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-test-framework</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-test-documents</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-it-common</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-core</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-settings</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-elasticsearch-client</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-elasticsearch-client-base</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-elasticsearch-client-v5</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-elasticsearch-client-v6</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-cli</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-beans</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-crawler</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-crawler-abstract</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-crawler-fs</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-crawler-ssh</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-tika</artifactId>
                 <version>2.6</version>
             </dependency>
             <dependency>
-                <groupId>fr.pilato.elasticsearch.crawler</groupId>
+                <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
                 <artifactId>fscrawler-rest</artifactId>
                 <version>2.6</version>
             </dependency>

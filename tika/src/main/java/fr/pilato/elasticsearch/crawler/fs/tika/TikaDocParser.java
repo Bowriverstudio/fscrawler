@@ -108,14 +108,21 @@ public class TikaDocParser {
 				// sets no limit
 				logger.trace("Beginning Custom Tika extraction");
 				if (fsSettings.getFs().customOcrEnabled()) {
-					
-					useDefault = CustomOcrUtil.isCustomOcrIncludes(fullFileName, fsSettings.getFs().getCustomOcrIncludes()) ?  false : true; 
+
+					useDefault = CustomOcrUtil.isCustomOcrIncludes(fullFileName,
+							fsSettings.getFs().getCustomOcrIncludes()) ? false : true;
 					logger.debug("custom ocr includes : {}", fsSettings.getFs().getCustomOcrIncludes());
 					if (!useDefault && !fsSettings.getFs().getCustomOcrSubscriptionKey().isEmpty()
 							&& fsSettings.getFs().getCustomOcrSubscriptionKey() != null) {
-						logger.debug("Started extraction with custom OCR : {}, Url : {}", fsSettings.getFs().getCustomOcrProviderName(), fsSettings.getFs().getCustomOcrProviderUrl());
+						
+						logger.debug("Getting custom OCR from factory : {}", fsSettings.getFs().getCustomOcrProviderName());
+						customOCRParser = CustomOCRFactory.getCustomOCR(fsSettings.getFs().getCustomOcrProviderName());
+						logger.debug("Started extraction with custom OCR : {}, Url : {}",
+								fsSettings.getFs().getCustomOcrProviderName(),
+								fsSettings.getFs().getCustomOcrProviderUrl());
 						OCRResponseModel response = customOCRParser.extractText(inputStream,
-								fsSettings.getFs().getCustomOcrSubscriptionKey(), fsSettings.getFs().getCustomOcrProviderUrl());
+								fsSettings.getFs().getCustomOcrSubscriptionKey(),
+								fsSettings.getFs().getCustomOcrProviderUrl());
 
 						if (!response.isUseDefaultParser()) {
 							// On if Custom parser is capable of processing parsing request case - skip
@@ -124,7 +131,7 @@ public class TikaDocParser {
 							logger.debug("Getting final response from custom Ocr parser..");
 							parsedContent = response.getExtractedTextResponse();
 						}
-					}else {
+					} else {
 						useDefault = true;
 					}
 				}

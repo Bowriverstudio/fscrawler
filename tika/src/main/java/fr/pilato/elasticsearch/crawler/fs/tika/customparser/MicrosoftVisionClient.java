@@ -45,7 +45,9 @@ public class MicrosoftVisionClient {
 
 			HttpResponse asyncBatchAnalyzeResponse = client.execute(asyncBatchAnalyzeRequest);
 
-			logger.debug("Batch Read File interface API response : " + asyncBatchAnalyzeResponse);
+			logger.debug("Batch Read File interface API response status : {}, message : {} ",
+					asyncBatchAnalyzeResponse.getStatusLine().getStatusCode(),
+					asyncBatchAnalyzeResponse.getStatusLine().getReasonPhrase());
 
 			/**
 			 * Response 202 - Request accepted When you use the Batch Read File interface,
