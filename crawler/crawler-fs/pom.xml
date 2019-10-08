@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>fscrawler-crawler</artifactId>
-        <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
-        <version>2.6</version>
+        <groupId>com.bowriverstudio</groupId>
+        <version>2.6-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,7 +14,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.bowriverstudio.elasticsearch.crawler</groupId>
+            <groupId>com.bowriverstudio</groupId>
             <artifactId>fscrawler-crawler-abstract</artifactId>
         </dependency>
     </dependencies>

@@ -55,13 +55,13 @@ Run tests with an external cluster
 
 To run the test suite against an elasticsearch instance running locally, just run::
 
-    mvn verify -pl com.bowriverstudio.elasticsearch.crawler:fscrawler-it-v6
+    mvn verify -pl com.bowriverstudio:fscrawler-it-v6
 
 .. tip::
 
     If you want to run against a version 5, run::
 
-        mvn verify -pl com.bowriverstudio.elasticsearch.crawler:fscrawler-it-v5
+        mvn verify -pl com.bowriverstudio:fscrawler-it-v5
 
 If elasticsearch is not running yet on ``http://localhost:9200``, FSCrawler project will run a Docker instance before
 the tests start.
@@ -70,7 +70,7 @@ the tests start.
 
     If you are using a secured instance, use ``tests.cluster.user``, ``tests.cluster.pass`` and ``tests.cluster.url``::
 
-        mvn verify -pl com.bowriverstudio.elasticsearch.crawler:fscrawler-it-v6 \
+        mvn verify -pl com.bowriverstudio:fscrawler-it-v6 \
             -Dtests.cluster.user=elastic \
             -Dtests.cluster.pass=changeme \
             -Dtests.cluster.url=https://127.0.0.1:9200 \
@@ -81,14 +81,14 @@ the tests start.
     `Elasticsearch service by Elastic <https://www.elastic.co/cloud/elasticsearch-service>`_,
     you can also use ``tests.cluster.url`` to set where elasticsearch is running::
 
-        mvn verify -pl com.bowriverstudio.elasticsearch.crawler:fscrawler-it-v6 \
+        mvn verify -pl com.bowriverstudio:fscrawler-it-v6 \
             -Dtests.cluster.user=elastic \
             -Dtests.cluster.pass=changeme \
             -Dtests.cluster.url=https://XYZ.es.io:9243
 
     Or even easier, you can use the ``Cloud ID`` available on you Cloud Console::
 
-        mvn verify -pl com.bowriverstudio.elasticsearch.crawler:fscrawler-it-v6 \
+        mvn verify -pl com.bowriverstudio:fscrawler-it-v6 \
             -Dtests.cluster.user=elastic \
             -Dtests.cluster.pass=changeme \
             -Dtests.cluster.cloud_id=fscrawler:ZXVyb3BlLXdlc3QxLmdjcC5jbG91ZC5lcy5pbyQxZDFlYTk5Njg4Nzc0NWE2YTJiN2NiNzkzMTUzNDhhMyQyOTk1MDI3MzZmZGQ0OTI5OTE5M2UzNjdlOTk3ZmU3Nw==
