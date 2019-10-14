@@ -16,7 +16,7 @@ public class CustomOcrUtil {
 	
 	/**
 	 * To extract original content from the extracted json with metadata.
-	 * @param finalResponse
+	 * @param finalResponse from custom OCR with metadata to be passed here to get actual content
 	 * @return StringBuilder with original extracted content from the document
 	 */
 	public static StringBuilder extractOriginalContentFromFinalJsonResponse(String finalResponse) {
@@ -42,8 +42,8 @@ public class CustomOcrUtil {
 	
 	 /**
      * 
-     * @param filename
-     * @param includes
+     * @param filename file name to find eligibility
+     * @param customOcrIncludes eligible includes
      * @return boolean. whether the custom ocr can process the file type or not
      */
     public static boolean isCustomOcrIncludes(String filename, List<String> customOcrIncludes) {

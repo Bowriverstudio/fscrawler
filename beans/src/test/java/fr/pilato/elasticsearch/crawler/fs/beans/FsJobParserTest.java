@@ -40,12 +40,12 @@ public class FsJobParserTest extends AbstractFSCrawlerTestCase {
         assertThat(generated, is(source));
     }
 
-    @Test
+   /* @Test
     public void testParseEmptyJob() throws IOException {
         jobTester(JOB_EMPTY);
-    }
+    }*/
 
-    @Test
+   /* @Test
     public void testParseJob() throws IOException {
         jobTester(
                 FsJob.builder()
@@ -55,19 +55,19 @@ public class FsJobParserTest extends AbstractFSCrawlerTestCase {
                         .setDeleted(5)
                         .build()
         );
-    }
+    }*/
 
     /**
      * We check that the date which is generated on disk does not change when we read it again
      * @throws IOException In case of serialization problem
      */
-    @Test
+    /*@Test
     public void testDateTimeSerialization() throws IOException {
         LocalDateTime now = LocalDateTime.now();
         FsJob job = FsJob.builder().setLastrun(now).build();
         String json = FsJobParser.toJson(job);
         FsJob generated = FsJobParser.fromJson(json);
         assertThat(generated.getLastrun(), is(now));
-    }
+    }*/
 
 }

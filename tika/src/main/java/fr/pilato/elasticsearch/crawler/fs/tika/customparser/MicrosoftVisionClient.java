@@ -25,11 +25,12 @@ public class MicrosoftVisionClient {
 	 * text from file (images and documents) Can handle hand-written, printed or
 	 * mixed documents
 	 * 
-	 * @param inputStream
-	 * @param mocrosoftOcpApimSubscriptionKey
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
+	 * @param inputStream of a file to be extracted
+	 * @param mocrosoftOcpApimSubscriptionKey subscription key
+	 * @param customerOcrProviderUrl custom ocr parser api url
+	 * @return OCRResponseModel
+	 * @throws IOException while handling with files
+	 * @throws InterruptedException thread sleep interruption
 	 */
 	public static OCRResponseModel getResponse(InputStream inputStream, String mocrosoftOcpApimSubscriptionKey, String customerOcrProviderUrl)
 			throws IOException, InterruptedException {
