@@ -72,7 +72,8 @@ public class MicrosoftVisionClient {
 					String response = EntityUtils.toString(finalResponseFromMicrosoftOCR.getEntity());
 					JSONObject jsonResponse = new JSONObject(response);
 					// check still processing ?
-					isStillRunning = jsonResponse.get("status") != null && jsonResponse.get("status").equals("Running");
+					isStillRunning = !(jsonResponse.get("status") != null && jsonResponse.get("status").equals("Succeeded"));
+					//is still running? not!
 					if (!isStillRunning) {
 						StringBuilder originalContent = CustomOcrUtil.extractOriginalContentFromFinalJsonResponse(response);
 						ocrResponse.setExtractedTextResponse(originalContent.toString());
